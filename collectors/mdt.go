@@ -2,61 +2,44 @@ package collectors
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/talfridmen/lustre_exporter/collectortypes"
 )
 
 var (
-	mdt_basic_stats_file_patterns    = [...]string{"mdt/*/md_stats"}
-	mdt_extended_stats_file_patterns = [...]string{}
+	mdtBasicStatsFilePatterns    = [...]string{"mdt/*/md_stats"}
+	mdtExtendedStatsFilePatterns = [...]string{}
 )
 
 type MDTCollector struct {
 	BaseCollector
-	statsCollector
+	collectortypes.StatsCollector
 }
 
 func NewMDTCollector(name string, level string) *MDTCollector {
 	return &MDTCollector{
-		BaseCollector{
+		BaseCollector: BaseCollector{
 			name:  name,
 			level: getCollectorLevel(name, level),
 		},
-		statsCollector{
-			stats_samples_metric: prometheus.NewDesc(
-				"lustre_mdt_stats_samples",
-				"number of samples of metadata operations",
-				[]string{"mdt", "stat_type"},
-				nil,
-			),
-			stats_sum_metric: prometheus.NewDesc(
-				"lustre_mdt_stats_sum",
-				"number of samples of metadata operations",
-				[]string{"mdt", "stat_type", "units"},
-				nil,
-			),
-			stats_sumsq_metric: prometheus.NewDesc(
-				"lustre_mdt_stats_sumsq",
-				"number of samples of metadata operations",
-				[]string{"mdt", "stat_type", "units"},
-				nil,
-			),
-			basic_stats_file_patterns:    mdt_basic_stats_file_patterns[:],
-			extended_stats_file_patterns: mdt_extended_stats_file_patterns[:],
-		},
+		StatsCollector: *collectortypes.NewStatsCollector(
+			prometheus.NewDesc("lustre_mdt_stats_samples", "number of samples of metadata operations", []string{"mdt", "stat_type"}, nil),
+			prometheus.NewDesc("lustre_mdt_stats_sum", "number of samples of metadata operations", []string{"mdt", "stat_type", "units"}, nil),
+			prometheus.NewDesc("lustre_mdt_stats_sumsq", "number of samples of metadata operations", []string{"mdt", "stat_type", "units"}, nil),
+			mdtBasicStatsFilePatterns[:],
+			mdtExtendedStatsFilePatterns[:]),
 	}
 }
 
-func (x *MDTCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- x.stats_samples_metric
-	ch <- x.stats_sum_metric
-	ch <- x.stats_sumsq_metric
+func (c *MDTCollector) Describe(ch chan<- *prometheus.Desc) {
+	c.StatsCollector.Describe(ch)
 }
 
 // CollectBasicMetrics collects basic metrics
 func (c *MDTCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
-	c.statsCollector.CollectBasicMetrics(ch)
+	c.StatsCollector.CollectBasicMetrics(ch)
 }
 
 // CollectExtendedMetrics collects extended metrics
 func (c *MDTCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
-	c.statsCollector.CollectExtendedMetrics(ch)
+	c.StatsCollector.CollectExtendedMetrics(ch)
 }
