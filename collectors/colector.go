@@ -53,7 +53,7 @@ func getCollectorLevel(collector string, levelStr string) Level {
 	case "disabled":
 		return Disabled
 	default:
-		fmt.Printf("collector %s got unexpected level %s, disabling it.", collector, levelStr)
+		fmt.Printf("collector %s got unexpected level %s, disabling it.\n", collector, levelStr)
 		return Disabled
 	}
 }

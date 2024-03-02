@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/talfridmen/lustre_exporter/consts"
 )
 
 // TODO: remove after use
@@ -116,13 +115,11 @@ func (x *StatsCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c *StatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, patterns []string) {
 	for _, pattern := range patterns {
-		fullPath := filepath.Join(consts.ProcfsBaseDir, pattern)
-		paths, _ := filepath.Glob(fullPath)
+		paths, _ := filepath.Glob(pattern)
 		if paths == nil {
 			continue
 		}
 		for _, path := range paths {
-			patternPath := strings.Replace(path, consts.ProcfsBaseDir, "", 1)
 			value, err := os.ReadFile(filepath.Clean(path))
 			if err != nil || value == nil {
 				fmt.Printf("could not read stat file %s\n", path)
@@ -132,9 +129,9 @@ func (c *StatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern
 				fmt.Printf("got error while parsing line: %s\n", err)
 			}
 			for _, stat := range stats {
-				ch <- prometheus.MustNewConstMetric(c.statsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), patternPath, stat.Syscall)
-				ch <- prometheus.MustNewConstMetric(c.statsSumMetric, prometheus.GaugeValue, float64(stat.Sum), patternPath, stat.Syscall, stat.Unit)
-				ch <- prometheus.MustNewConstMetric(c.statsSumsqMetric, prometheus.GaugeValue, float64(stat.SumSquared), patternPath, stat.Syscall, stat.Unit)
+				ch <- prometheus.MustNewConstMetric(c.statsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), path, stat.Syscall)
+				ch <- prometheus.MustNewConstMetric(c.statsSumMetric, prometheus.GaugeValue, float64(stat.Sum), path, stat.Syscall, stat.Unit)
+				ch <- prometheus.MustNewConstMetric(c.statsSumsqMetric, prometheus.GaugeValue, float64(stat.SumSquared), path, stat.Syscall, stat.Unit)
 			}
 		}
 	}
