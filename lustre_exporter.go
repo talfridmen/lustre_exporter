@@ -1,0 +1,82 @@
+package main
+
+import (
+	"flag"
+	"log"
+	"net/http"
+	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/talfridmen/lustre_exporter/collectors"
+)
+
+func main() {
+	// Define command-line flags
+	mdtLevel := flag.String("mdt", "extended", "Enable stats collection (disabled,basic,extended)")
+
+	// Parse command-line flags
+	flag.Parse()
+
+	// Create a new exporter
+	exporter := NewExporter()
+
+	// Register collectors with user-specified levels
+	exporter.RegisterCollector(collectors.NewMDTCollector("mdt", *mdtLevel))
+
+	// Start the exporter
+	exporter.Start(":9090")
+}
+
+// Exporter represents the Prometheus exporter
+type Exporter struct {
+	mu         sync.Mutex
+	collectors []collectors.Collector
+}
+
+// NewExporter creates a new exporter instance
+func NewExporter() *Exporter {
+	return &Exporter{}
+}
+
+// RegisterCollector registers a collector to the exporter
+func (e *Exporter) RegisterCollector(c collectors.Collector) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	e.collectors = append(e.collectors, c)
+}
+
+func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
+	wg := sync.WaitGroup{}
+	wg.Add(len(e.collectors))
+	for _, c := range e.collectors {
+		go func(collector collectors.Collector) {
+			switch collector.GetLevel() {
+			case collectors.Disabled:
+			case collectors.Basic:
+				collector.CollectBasicMetrics(ch)
+			case collectors.Extended:
+				collector.CollectBasicMetrics(ch)
+				collector.CollectExtendedMetrics(ch)
+			}
+			wg.Done()
+		}(c)
+	}
+	wg.Wait()
+}
+
+func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
+	for _, c := range e.collectors {
+		c.Describe(ch)
+	}
+}
+
+// Start starts the exporter on the given address
+func (e *Exporter) Start(address string) {
+	prometheus.MustRegister(e)
+	http.Handle("/metrics", promhttp.Handler())
+
+	log.Fatal(http.ListenAndServe(address, nil))
+}
