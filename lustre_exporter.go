@@ -53,6 +53,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	wg.Add(len(e.collectors))
 	for _, c := range e.collectors {
 		go func(collector collectors.Collector) {
+			defer wg.Done()
 			switch collector.GetLevel() {
 			case collectors.Disabled:
 			case collectors.Basic:
@@ -61,7 +62,6 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 				collector.CollectBasicMetrics(ch)
 				collector.CollectExtendedMetrics(ch)
 			}
-			wg.Done()
 		}(c)
 	}
 	wg.Wait()
