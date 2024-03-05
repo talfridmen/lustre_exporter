@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/talfridmen/lustre_exporter/consts"
 )
 
 // TODO: remove after use
@@ -93,17 +94,17 @@ type StatsCollector struct {
 	statsSamplesMetric        *prometheus.Desc
 	statsSumMetric            *prometheus.Desc
 	statsSumsqMetric          *prometheus.Desc
-	basicStatsFilePatterns    []string
-	extendedStatsFilePatterns []string
+	statsFilePatterns    string
+	level consts.Level
 }
 
-func NewStatsCollector(statsSamplesMetric *prometheus.Desc, statsSumMetric *prometheus.Desc, statsSumsqMetric *prometheus.Desc, basicStatsFilePatterns []string, extendedStatsFilePatterns []string) *StatsCollector {
+func NewStatsCollector(statsSamplesMetric *prometheus.Desc, statsSumMetric *prometheus.Desc, statsSumsqMetric *prometheus.Desc, statsFilePatterns string, level consts.Level) *StatsCollector {
 	return &StatsCollector{
 		statsSamplesMetric:        statsSamplesMetric,
 		statsSumMetric:            statsSumMetric,
 		statsSumsqMetric:          statsSumsqMetric,
-		basicStatsFilePatterns:    basicStatsFilePatterns,
-		extendedStatsFilePatterns: extendedStatsFilePatterns,
+		statsFilePatterns:    statsFilePatterns,
+		level: level,
 	}
 }
 
@@ -113,11 +114,10 @@ func (x *StatsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- x.statsSumsqMetric
 }
 
-func (c *StatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, patterns []string) {
-	for _, pattern := range patterns {
+func (c *StatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern string) {
 		paths, _ := filepath.Glob(pattern)
 		if paths == nil {
-			continue
+			return
 		}
 		for _, path := range paths {
 			value, err := os.ReadFile(filepath.Clean(path))
@@ -135,14 +135,17 @@ func (c *StatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern
 			}
 		}
 	}
-}
 
 // CollectBasicMetrics collects basic metrics
 func (c *StatsCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
-	c.CollectStatMetrics(ch, c.basicStatsFilePatterns[:])
+	if c.level == consts.Basic {
+		c.CollectStatMetrics(ch, c.statsFilePatterns)
+	}
 }
 
 // CollectExtendedMetrics collects extended metrics
 func (c *StatsCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
-	c.CollectStatMetrics(ch, c.extendedStatsFilePatterns[:])
+	if c.level == consts.Extended {
+		c.CollectStatMetrics(ch, c.statsFilePatterns)
+	}
 }

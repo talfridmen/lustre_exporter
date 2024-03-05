@@ -5,19 +5,20 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/talfridmen/lustre_exporter/collectortypes"
+	"github.com/talfridmen/lustre_exporter/consts"
 )
 
 type Collector interface {
 	CollectBasicMetrics(ch chan<- prometheus.Metric)
 	CollectExtendedMetrics(ch chan<- prometheus.Metric)
 	Describe(ch chan<- *prometheus.Desc)
-	GetLevel() Level
+	GetLevel() consts.Level
 }
 
 // Collector represents the interface for a collector
 type BaseCollector struct {
 	name            string
-	level           Level
+	level           consts.Level
 	statsCollectors []collectortypes.StatsCollector
 }
 
@@ -32,7 +33,7 @@ type BaseCollector struct {
 // }
 
 // GetLevel returns the level of operation for the collector
-func (c *BaseCollector) GetLevel() Level {
+func (c *BaseCollector) GetLevel() consts.Level {
 	return c.level
 }
 
@@ -56,26 +57,17 @@ func (c *BaseCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
 	}
 }
 
-// Level represents the operation level of a collector
-type Level int
-
-const (
-	Disabled Level = iota
-	Basic
-	Extended
-)
-
 // getCollectorLevel determines the level for the collector based on user input
-func getCollectorLevel(collector string, levelStr string) Level {
+func getCollectorLevel(collector string, levelStr string) consts.Level {
 	switch levelStr {
 	case "basic":
-		return Basic
+		return consts.Basic
 	case "extended":
-		return Extended
+		return consts.Extended
 	case "disabled":
-		return Disabled
+		return consts.Disabled
 	default:
 		fmt.Printf("collector %s got unexpected level %s, disabling it.\n", collector, levelStr)
-		return Disabled
+		return consts.Disabled
 	}
 }

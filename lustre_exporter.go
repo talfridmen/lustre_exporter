@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/talfridmen/lustre_exporter/collectors"
+	"github.com/talfridmen/lustre_exporter/consts"
 )
 
 func main() {
@@ -57,10 +58,10 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		go func(collector collectors.Collector) {
 			defer wg.Done()
 			switch collector.GetLevel() {
-			case collectors.Disabled:
-			case collectors.Basic:
+			case consts.Disabled:
+			case consts.Basic:
 				collector.CollectBasicMetrics(ch)
-			case collectors.Extended:
+			case consts.Extended:
 				collector.CollectBasicMetrics(ch)
 				collector.CollectExtendedMetrics(ch)
 			}
