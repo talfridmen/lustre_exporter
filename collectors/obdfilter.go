@@ -33,6 +33,33 @@ func NewOBDFilterCollector(name string, level string) *OBDFilterCollector {
 					consts.Extended,
 				),
 			},
+			singleCollectors: []collectortypes.SingleCollector{
+				*collectortypes.NewSingleCollector(
+					prometheus.NewDesc("lustre_obdfilter_avail_kbytes", "ost space available for non-root users in kbytes", []string{"path"}, nil),
+					fmt.Sprintf("%s/obdfilter/*/kbytesavail", consts.SysfsBaseDir),
+					consts.Basic,
+				),
+				*collectortypes.NewSingleCollector(
+					prometheus.NewDesc("lustre_obdfilter_free_kbytes", "ost free space in kbytes", []string{"path"}, nil),
+					fmt.Sprintf("%s/obdfilter/*/kbytesfree", consts.SysfsBaseDir),
+					consts.Basic,
+				),
+				*collectortypes.NewSingleCollector(
+					prometheus.NewDesc("lustre_obdfilter_total_kbytes", "ost total space in kbytes", []string{"path"}, nil),
+					fmt.Sprintf("%s/obdfilter/*/kbytestotal", consts.SysfsBaseDir),
+					consts.Basic,
+				),
+				*collectortypes.NewSingleCollector(
+					prometheus.NewDesc("lustre_obdfilter_files_free", "ost free inodes", []string{"path"}, nil),
+					fmt.Sprintf("%s/obdfilter/*/filesfree", consts.SysfsBaseDir),
+					consts.Basic,
+				),
+				*collectortypes.NewSingleCollector(
+					prometheus.NewDesc("lustre_obdfilter_files_total", "ost total inodes", []string{"path"}, nil),
+					fmt.Sprintf("%s/obdfilter/*/filestotal", consts.SysfsBaseDir),
+					consts.Basic,
+				),
+			},
 		},
 	}
 }
