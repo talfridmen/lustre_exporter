@@ -59,6 +59,21 @@ func NewOBDFilterCollector(name string, level string) *OBDFilterCollector {
 					fmt.Sprintf("%s/obdfilter/*/filestotal", consts.SysfsBaseDir),
 					consts.Basic,
 				),
+				*collectortypes.NewSingleCollector(
+					prometheus.NewDesc("lustre_obdfilter_brw_size_bytes", "ost bulk read/write size", []string{"path"}, nil),
+					fmt.Sprintf("%s/obdfilter/*/brw_size", consts.SysfsBaseDir),
+					consts.Basic,
+				),
+				*collectortypes.NewSingleCollector(
+					prometheus.NewDesc("lustre_obdfilter_job_cleanup_interval_seconds", "the timeout for which an inactive job will be removed from memory", []string{"path"}, nil),
+					fmt.Sprintf("%s/obdfilter/*/job_cleanup_interval ", consts.SysfsBaseDir),
+					consts.Basic,
+				),
+				*collectortypes.NewSingleCollector(
+					prometheus.NewDesc("lustre_obdfilter_exports_count", "number of times an ost is exported", []string{"path"}, nil),
+					fmt.Sprintf("%s/obdfilter/*/num_exports ", consts.SysfsBaseDir),
+					consts.Basic,
+				),
 			},
 		},
 	}
