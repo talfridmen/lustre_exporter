@@ -74,6 +74,11 @@ func NewOBDFilterCollector(name string, level string) *OBDFilterCollector {
 					fmt.Sprintf("%s/obdfilter/*/num_exports", consts.ProcfsBaseDir),
 					consts.Basic,
 				),
+				*collectortypes.NewSingleCollector(
+					prometheus.NewDesc("lustre_obdfilter_degraded", "whether a pool is degraded or not", []string{"path"}, nil),
+					fmt.Sprintf("%s/obdfilter/*/degraded", consts.ProcfsBaseDir),
+					consts.Basic,
+				),
 			},
 		},
 	}
