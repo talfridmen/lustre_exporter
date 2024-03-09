@@ -33,6 +33,13 @@ func NewMDTCollector(name string, level string) *MDTCollector {
 					consts.Extended,
 				),
 			},
+			singleCollectors: []collectortypes.SingleCollector{
+				*collectortypes.NewSingleCollector(
+					prometheus.NewDesc("lustre_mdt_num_exports", "number f exports an mdt has", []string{"path"}, nil),
+					fmt.Sprintf("%s/mdt/*/num_exports", consts.ProcfsBaseDir),
+					consts.Basic,
+				),
+			},
 		},
 	}
 }
