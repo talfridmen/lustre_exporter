@@ -17,7 +17,7 @@ func main() {
 	// Define command-line flags
 	mdtLevel := flag.String("mdt", "extended", "Enable mdt collection (disabled,basic,extended)")
 	obdfilterLevel := flag.String("obdfilter", "extended", "Enable obdfilter collection (disabled,basic,extended)")
-
+	ldlmLevel := flag.String("ldlm", "extended", "Enable ldlm collection (disabled,basic,extended)")
 	// Parse command-line flags
 	flag.Parse()
 
@@ -27,6 +27,7 @@ func main() {
 	// Register collectors with user-specified levels
 	exporter.RegisterCollector(collectors.NewMDTCollector("mdt", *mdtLevel))
 	exporter.RegisterCollector(collectors.NewOBDFilterCollector("obdfilter", *obdfilterLevel))
+	exporter.RegisterCollector(collectors.NewLdlmCollector("ldlm", *ldlmLevel))
 
 	// Start the exporter
 	exporter.Start(":9090")
