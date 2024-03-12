@@ -12,12 +12,6 @@ import (
 	"github.com/talfridmen/lustre_exporter/consts"
 )
 
-// TODO: remove after use
-// var (
-// 	basic_stats_file_patterns    = [...]string{"mdt/*/md_stats", "obdfilter/*/stats"}
-// 	extended_stats_file_patterns = [...]string{"mdt/*/exports/*/stats", "obdfilter/*/exports/*/stats", "ldlm.namespaces.filter-*.pool.stats"}
-// )
-
 // SampleData represents the parsed information for each label
 type Stat struct {
 	Syscall                   string
@@ -91,20 +85,20 @@ func ParseStats(input string) ([]Stat, error) {
 }
 
 type StatsCollector struct {
-	statsSamplesMetric        *prometheus.Desc
-	statsSumMetric            *prometheus.Desc
-	statsSumsqMetric          *prometheus.Desc
-	statsFilePatterns    string
-	level consts.Level
+	statsSamplesMetric *prometheus.Desc
+	statsSumMetric     *prometheus.Desc
+	statsSumsqMetric   *prometheus.Desc
+	statsFilePatterns  string
+	level              consts.Level
 }
 
 func NewStatsCollector(statsSamplesMetric *prometheus.Desc, statsSumMetric *prometheus.Desc, statsSumsqMetric *prometheus.Desc, statsFilePatterns string, level consts.Level) *StatsCollector {
 	return &StatsCollector{
-		statsSamplesMetric:        statsSamplesMetric,
-		statsSumMetric:            statsSumMetric,
-		statsSumsqMetric:          statsSumsqMetric,
-		statsFilePatterns:    statsFilePatterns,
-		level: level,
+		statsSamplesMetric: statsSamplesMetric,
+		statsSumMetric:     statsSumMetric,
+		statsSumsqMetric:   statsSumsqMetric,
+		statsFilePatterns:  statsFilePatterns,
+		level:              level,
 	}
 }
 
@@ -115,26 +109,26 @@ func (x *StatsCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *StatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern string) {
-		paths, _ := filepath.Glob(pattern)
-		if paths == nil {
-			return
+	paths, _ := filepath.Glob(pattern)
+	if paths == nil {
+		return
+	}
+	for _, path := range paths {
+		value, err := os.ReadFile(filepath.Clean(path))
+		if err != nil || value == nil {
+			fmt.Printf("could not read stat file %s\n", path)
 		}
-		for _, path := range paths {
-			value, err := os.ReadFile(filepath.Clean(path))
-			if err != nil || value == nil {
-				fmt.Printf("could not read stat file %s\n", path)
-			}
-			stats, err := ParseStats(string(value))
-			if err != nil {
-				fmt.Printf("got error while parsing line: %s\n", err)
-			}
-			for _, stat := range stats {
-				ch <- prometheus.MustNewConstMetric(c.statsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), path, stat.Syscall)
-				ch <- prometheus.MustNewConstMetric(c.statsSumMetric, prometheus.GaugeValue, float64(stat.Sum), path, stat.Syscall, stat.Unit)
-				ch <- prometheus.MustNewConstMetric(c.statsSumsqMetric, prometheus.GaugeValue, float64(stat.SumSquared), path, stat.Syscall, stat.Unit)
-			}
+		stats, err := ParseStats(string(value))
+		if err != nil {
+			fmt.Printf("got error while parsing line: %s\n", err)
+		}
+		for _, stat := range stats {
+			ch <- prometheus.MustNewConstMetric(c.statsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), path, stat.Syscall)
+			ch <- prometheus.MustNewConstMetric(c.statsSumMetric, prometheus.GaugeValue, float64(stat.Sum), path, stat.Syscall, stat.Unit)
+			ch <- prometheus.MustNewConstMetric(c.statsSumsqMetric, prometheus.GaugeValue, float64(stat.SumSquared), path, stat.Syscall, stat.Unit)
 		}
 	}
+}
 
 // CollectBasicMetrics collects basic metrics
 func (c *StatsCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
