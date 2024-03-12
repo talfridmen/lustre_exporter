@@ -34,7 +34,7 @@ func NewLdlmCollector(name string, level string) *LdlmCollector {
 				),
 				*collectortypes.NewSingleCollector(
 					prometheus.NewDesc("lustre_ldlm_ost_lock_count", "total number of locks for an ost", []string{"path"}, nil),
-					fmt.Sprintf("%s/ldlm/namespaces/filter-*/lock_count", consts.KernelDebugBaseDir),
+					fmt.Sprintf("%s/ldlm/namespaces/filter-*/lock_count", consts.SysfsBaseDir),
 					consts.Basic,
 				),
 			},
