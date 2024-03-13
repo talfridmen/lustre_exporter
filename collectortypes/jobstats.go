@@ -33,15 +33,17 @@ func ParseJobStat(input string) ([]JobStat, error) {
 
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	job := ""
+	scanner.Scan()
+	scanner.Text()
 
 	for scanner.Scan() {
-		line := scanner.Text()
+		line := strings.TrimSpace(scanner.Text())
 		if strings.HasPrefix(line, "snapshot_time") {
 			// Skip the snapshot_time line
 			continue
 		}
-		if strings.HasPrefix(line, "- job_id") {
-			suffix, _ := strings.CutPrefix(line, "- job_id")
+		if strings.HasPrefix(line, "- job_id:") {
+			suffix, _ := strings.CutPrefix(line, "- job_id:")
 			job = strings.TrimSpace(suffix)
 			continue
 		}
@@ -51,7 +53,7 @@ func ParseJobStat(input string) ([]JobStat, error) {
 			return nil, fmt.Errorf("invalid input format: %s", line)
 		}
 
-		syscall := fields[0]
+		syscall := strings.TrimSuffix(fields[0], ":")
 
 		numSamples, err := strconv.Atoi(strings.Trim(fields[3], ","))
 		if err != nil {
@@ -59,22 +61,22 @@ func ParseJobStat(input string) ([]JobStat, error) {
 		}
 
 		unit := strings.Trim(fields[5], ",")
-		min, err := strconv.Atoi(fields[7])
+		min, err := strconv.Atoi(strings.Trim(fields[7], ","))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse min value: %v", err)
 		}
 
-		max, err := strconv.Atoi(fields[9])
+		max, err := strconv.Atoi(strings.Trim(fields[9], ","))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse max value: %v", err)
 		}
 
-		sum, err := strconv.Atoi(fields[11])
+		sum, err := strconv.Atoi(strings.Trim(fields[11], ","))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse sum value: %v", err)
 		}
 
-		sumSquared, err := strconv.Atoi(fields[13])
+		sumSquared, err := strconv.Atoi(strings.Trim(fields[13], ","))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse sum squared value: %v", err)
 		}
@@ -138,7 +140,7 @@ func (c *JobStatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, patt
 		}
 		for _, stat := range stats {
 			ch <- prometheus.MustNewConstMetric(c.jobStatsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), path, stat.Job, stat.Syscall)
-			ch <- prometheus.MustNewConstMetric(c.jobStatsSumMetric, prometheus.GaugeValue, float64(stat.Sum), path, stat.Syscall, stat.Job, stat.Unit)
+			ch <- prometheus.MustNewConstMetric(c.jobStatsSumMetric, prometheus.GaugeValue, float64(stat.Sum), path, stat.Job, stat.Syscall, stat.Unit)
 			ch <- prometheus.MustNewConstMetric(c.jobStatsSumsqMetric, prometheus.GaugeValue, float64(stat.SumSquared), path, stat.Job, stat.Syscall, stat.Unit)
 		}
 	}

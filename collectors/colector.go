@@ -17,10 +17,11 @@ type Collector interface {
 
 // Collector represents the interface for a collector
 type BaseCollector struct {
-	name             string
-	level            consts.Level
-	statsCollectors  []collectortypes.StatsCollector
-	singleCollectors []collectortypes.SingleCollector
+	name               string
+	level              consts.Level
+	statsCollectors    []collectortypes.StatsCollector
+	singleCollectors   []collectortypes.SingleCollector
+	jobStatsCollectors []collectortypes.JobStatsCollector
 }
 
 // GetLevel returns the level of operation for the collector
@@ -35,6 +36,9 @@ func (c *BaseCollector) Describe(ch chan<- *prometheus.Desc) {
 	for _, singleCollector := range c.singleCollectors {
 		singleCollector.Describe(ch)
 	}
+	for _, jobStatsCollector := range c.jobStatsCollectors {
+		jobStatsCollector.Describe(ch)
+	}
 }
 
 // CollectBasicMetrics collects basic metrics
@@ -45,6 +49,9 @@ func (c *BaseCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
 	for _, singleCollector := range c.singleCollectors {
 		singleCollector.CollectBasicMetrics(ch)
 	}
+	for _, jobStatsCollector := range c.jobStatsCollectors {
+		jobStatsCollector.CollectBasicMetrics(ch)
+	}
 }
 
 // CollectExtendedMetrics collects extended metrics
@@ -54,6 +61,9 @@ func (c *BaseCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
 	}
 	for _, singleCollector := range c.singleCollectors {
 		singleCollector.CollectExtendedMetrics(ch)
+	}
+	for _, jobStatsCollector := range c.jobStatsCollectors {
+		jobStatsCollector.CollectExtendedMetrics(ch)
 	}
 }
 

@@ -40,6 +40,15 @@ func NewMDTCollector(name string, level string) *MDTCollector {
 					consts.Basic,
 				),
 			},
+			jobStatsCollectors: []collectortypes.JobStatsCollector{
+				*collectortypes.NewJobStatsCollector(
+					prometheus.NewDesc("lustre_mdt_job_stats_samples", "number of samples of metadata operations per job", []string{"path", "job", "stat_type"}, nil),
+					prometheus.NewDesc("lustre_mdt_job_stats_sum", "number of samples of metadata operations per job", []string{"path", "job", "stat_type", "units"}, nil),
+					prometheus.NewDesc("lustre_mdt_job_stats_sumsq", "number of samples of metadata operations per job", []string{"path", "job", "stat_type", "units"}, nil),
+					fmt.Sprintf("%s/mdt/*/job_stats", consts.ProcfsBaseDir),
+					consts.Extended,
+				),
+			},
 		},
 	}
 }
