@@ -22,6 +22,7 @@ type BaseCollector struct {
 	statsCollectors    []collectortypes.StatsCollector
 	singleCollectors   []collectortypes.SingleCollector
 	jobStatsCollectors []collectortypes.JobStatsCollector
+	quotaCollectors    []collectortypes.QuotaCollector
 }
 
 // GetLevel returns the level of operation for the collector
@@ -39,6 +40,9 @@ func (c *BaseCollector) Describe(ch chan<- *prometheus.Desc) {
 	for _, jobStatsCollector := range c.jobStatsCollectors {
 		jobStatsCollector.Describe(ch)
 	}
+	for _, quotaCollector := range c.quotaCollectors {
+		quotaCollector.Describe(ch)
+	}
 }
 
 // CollectBasicMetrics collects basic metrics
@@ -52,6 +56,9 @@ func (c *BaseCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
 	for _, jobStatsCollector := range c.jobStatsCollectors {
 		jobStatsCollector.CollectBasicMetrics(ch)
 	}
+	for _, quotaCollector := range c.quotaCollectors {
+		quotaCollector.CollectBasicMetrics(ch)
+	}
 }
 
 // CollectExtendedMetrics collects extended metrics
@@ -64,6 +71,9 @@ func (c *BaseCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
 	}
 	for _, jobStatsCollector := range c.jobStatsCollectors {
 		jobStatsCollector.CollectExtendedMetrics(ch)
+	}
+	for _, quotaCollector := range c.quotaCollectors {
+		quotaCollector.CollectExtendedMetrics(ch)
 	}
 }
 

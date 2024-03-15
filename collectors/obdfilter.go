@@ -95,6 +95,29 @@ func NewOBDFilterCollector(name string, level string) *OBDFilterCollector {
 					consts.Basic,
 				),
 			},
+			quotaCollectors: []collectortypes.QuotaCollector{
+				*collectortypes.NewQuotaCollector(
+					collectortypes.NewMetricInfo("lustre_data_quota_hard_user", "hard quota per user"),
+					collectortypes.NewMetricInfo("lustre_data_quota_soft_user", "soft quota per user"),
+					fmt.Sprintf("%s/qmt/*/dt-0x0/glb-usr", consts.ProcfsBaseDir),
+					fmt.Sprintf(`%s/qmt/(?P<filesystem>.*)-(?P<qmt>QMT\d+)/dt-0x0/glb-usr`, consts.ProcfsBaseDir),
+					consts.Basic,
+				),
+				*collectortypes.NewQuotaCollector(
+					collectortypes.NewMetricInfo("lustre_data_quota_hard_group", "hard quota per group"),
+					collectortypes.NewMetricInfo("lustre_data_quota_soft_group", "soft quota per group"),
+					fmt.Sprintf("%s/qmt/*/dt-0x0/glb-grp", consts.ProcfsBaseDir),
+					fmt.Sprintf(`%s/qmt/(?P<filesystem>.*)-(?P<qmt>QMT\d+)/dt-0x0/glb-grp`, consts.ProcfsBaseDir),
+					consts.Basic,
+				),
+				*collectortypes.NewQuotaCollector(
+					collectortypes.NewMetricInfo("lustre_data_quota_hard_project", "hard quota per project"),
+					collectortypes.NewMetricInfo("lustre_data_quota_soft_project", "soft quota per project"),
+					fmt.Sprintf("%s/qmt/*/dt-0x0/glb-prj", consts.ProcfsBaseDir),
+					fmt.Sprintf(`%s/qmt/(?P<filesystem>.*)-(?P<qmt>QMT\d+)/dt-0x0/glb-prj`, consts.ProcfsBaseDir),
+					consts.Basic,
+				),
+			},
 		},
 	}
 }
