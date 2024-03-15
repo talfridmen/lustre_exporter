@@ -3,7 +3,6 @@ package collectors
 import (
 	"fmt"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/talfridmen/lustre_exporter/collectortypes"
 	"github.com/talfridmen/lustre_exporter/consts"
 )
@@ -19,22 +18,25 @@ func NewLdlmCollector(name string, level string) *LdlmCollector {
 			level: getCollectorLevel(name, level),
 			statsCollectors: []collectortypes.StatsCollector{
 				*collectortypes.NewStatsCollector(
-					prometheus.NewDesc("lustre_ldlm_cancel_samples", "number of samples of metadata operations", []string{"path", "stat_type"}, nil),
-					prometheus.NewDesc("lustre_ldlm_cancel_sum", "number of samples of metadata operations", []string{"path", "stat_type", "units"}, nil),
-					prometheus.NewDesc("lustre_ldlm_cancel_sumsq", "number of samples of metadata operations", []string{"path", "stat_type", "units"}, nil),
+					collectortypes.NewMetricInfo("lustre_ldlm_cancel_samples", "number of samples of metadata operations"),
+					collectortypes.NewMetricInfo("lustre_ldlm_cancel_sum", "number of samples of metadata operations"),
+					collectortypes.NewMetricInfo("lustre_ldlm_cancel_sumsq", "number of samples of metadata operations"),
 					fmt.Sprintf("%s/ldlm/services/ldlm_canceld/stats", consts.KernelDebugBaseDir),
+					fmt.Sprintf(`%s/ldlm/services/ldlm_canceld/stats`, consts.KernelDebugBaseDir),
 					consts.Extended,
 				),
 			},
 			singleCollectors: []collectortypes.SingleCollector{
 				*collectortypes.NewSingleCollector(
-					prometheus.NewDesc("lustre_ldlm_lock_granted_count", "total number of locks granted", []string{"path"}, nil),
+					collectortypes.NewMetricInfo("lustre_ldlm_lock_granted_count", "total number of locks granted"),
 					fmt.Sprintf("%s/ldlm/lock_granted_count", consts.KernelDebugBaseDir),
+					fmt.Sprintf(`%s/ldlm/lock_granted_count`, consts.KernelDebugBaseDir),
 					consts.Basic,
 				),
 				*collectortypes.NewSingleCollector(
-					prometheus.NewDesc("lustre_ldlm_ost_lock_count", "total number of locks for an ost", []string{"path"}, nil),
+					collectortypes.NewMetricInfo("lustre_ldlm_ost_lock_count", "total number of locks for an ost"),
 					fmt.Sprintf("%s/ldlm/namespaces/filter-*/lock_count", consts.SysfsBaseDir),
+					fmt.Sprintf(`%s/ldlm/namespaces/filter-(?P<filesystem>.*)-(?P<ost>OST\d+)_UUID/lock_count`, consts.SysfsBaseDir),
 					consts.Basic,
 				),
 			},

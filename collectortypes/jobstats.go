@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -12,11 +13,14 @@ import (
 	"github.com/talfridmen/lustre_exporter/consts"
 )
 
-// TODO: remove after use
-// var (
-// 	basic_stats_file_patterns    = [...]string{"mdt/*/md_stats", "obdfilter/*/stats"}
-// 	extended_stats_file_patterns = [...]string{"mdt/*/exports/*/stats", "obdfilter/*/exports/*/stats", "ldlm.namespaces.filter-*.pool.stats"}
-// )
+type JobStatsCollector struct {
+	jobStatsSamplesMetric *prometheus.Desc
+	jobStatsSumMetric     *prometheus.Desc
+	jobStatsSumsqMetric   *prometheus.Desc
+	jobStatsFilePatterns  string
+	jobStatsFileRegex     regexp.Regexp
+	level                 consts.Level
+}
 
 // SampleData represents the parsed information for each label
 type JobStat struct {
@@ -25,6 +29,61 @@ type JobStat struct {
 	NumSamples                int
 	Unit                      string
 	Min, Max, Sum, SumSquared int
+}
+
+func NewJobStatsCollector(jobStatsSamplesMetric *MetricInfo, jobStatsSumMetric *MetricInfo, jobStatsSumsqMetric *MetricInfo, jobStatsFilePatterns string, jobStatsFileRegex string, level consts.Level) *JobStatsCollector {
+	jobStatsFileRegexp := *regexp.MustCompile(jobStatsFileRegex)
+	return &JobStatsCollector{
+		jobStatsSamplesMetric: jobStatsSamplesMetric.CreatePrometheusMetric([]string{"job", "stat_type"}, jobStatsFileRegexp),
+		jobStatsSumMetric:     jobStatsSumMetric.CreatePrometheusMetric([]string{"job", "stat_type", "units"}, jobStatsFileRegexp),
+		jobStatsSumsqMetric:   jobStatsSumsqMetric.CreatePrometheusMetric([]string{"job", "stat_type", "units"}, jobStatsFileRegexp),
+		jobStatsFilePatterns:  jobStatsFilePatterns,
+		jobStatsFileRegex:     jobStatsFileRegexp,
+		level:                 level,
+	}
+}
+
+func (x *JobStatsCollector) Describe(ch chan<- *prometheus.Desc) {
+	ch <- x.jobStatsSamplesMetric
+	ch <- x.jobStatsSumMetric
+	ch <- x.jobStatsSumsqMetric
+}
+
+// CollectBasicMetrics collects basic metrics
+func (c *JobStatsCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
+	if c.level == consts.Basic {
+		c.CollectStatMetrics(ch, c.jobStatsFilePatterns)
+	}
+}
+
+// CollectExtendedMetrics collects extended metrics
+func (c *JobStatsCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
+	if c.level == consts.Extended {
+		c.CollectStatMetrics(ch, c.jobStatsFilePatterns)
+	}
+}
+
+func (c *JobStatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern string) {
+	paths, _ := filepath.Glob(pattern)
+	if paths == nil {
+		return
+	}
+	for _, path := range paths {
+		pathLabels := c.jobStatsFileRegex.FindStringSubmatch(path)[1:]
+		value, err := os.ReadFile(filepath.Clean(path))
+		if err != nil || value == nil {
+			fmt.Printf("could not read stat file %s\n", path)
+		}
+		stats, err := ParseJobStat(string(value))
+		if err != nil {
+			fmt.Printf("got error while parsing line: %s\n", err)
+		}
+		for _, stat := range stats {
+			ch <- prometheus.MustNewConstMetric(c.jobStatsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), append([]string{stat.Job, stat.Syscall}, pathLabels...)...)
+			ch <- prometheus.MustNewConstMetric(c.jobStatsSumMetric, prometheus.GaugeValue, float64(stat.Sum), append([]string{stat.Job, stat.Syscall, stat.Unit}, pathLabels...)...)
+			ch <- prometheus.MustNewConstMetric(c.jobStatsSumsqMetric, prometheus.GaugeValue, float64(stat.SumSquared), append([]string{stat.Job, stat.Syscall, stat.Unit}, pathLabels...)...)
+		}
+	}
 }
 
 // ParseInput parses the input string and returns a slice of SampleData
@@ -98,64 +157,4 @@ func ParseJobStat(input string) ([]JobStat, error) {
 	}
 
 	return result, nil
-}
-
-type JobStatsCollector struct {
-	jobStatsSamplesMetric *prometheus.Desc
-	jobStatsSumMetric     *prometheus.Desc
-	jobStatsSumsqMetric   *prometheus.Desc
-	jobStatsFilePatterns  string
-	level                 consts.Level
-}
-
-func NewJobStatsCollector(jobStatsSamplesMetric *prometheus.Desc, jobStatsSumMetric *prometheus.Desc, jobStatsSumsqMetric *prometheus.Desc, jobStatsFilePatterns string, level consts.Level) *JobStatsCollector {
-	return &JobStatsCollector{
-		jobStatsSamplesMetric: jobStatsSamplesMetric,
-		jobStatsSumMetric:     jobStatsSumMetric,
-		jobStatsSumsqMetric:   jobStatsSumsqMetric,
-		jobStatsFilePatterns:  jobStatsFilePatterns,
-		level:                 level,
-	}
-}
-
-func (x *JobStatsCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- x.jobStatsSamplesMetric
-	ch <- x.jobStatsSumMetric
-	ch <- x.jobStatsSumsqMetric
-}
-
-func (c *JobStatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern string) {
-	paths, _ := filepath.Glob(pattern)
-	if paths == nil {
-		return
-	}
-	for _, path := range paths {
-		value, err := os.ReadFile(filepath.Clean(path))
-		if err != nil || value == nil {
-			fmt.Printf("could not read stat file %s\n", path)
-		}
-		stats, err := ParseJobStat(string(value))
-		if err != nil {
-			fmt.Printf("got error while parsing line: %s\n", err)
-		}
-		for _, stat := range stats {
-			ch <- prometheus.MustNewConstMetric(c.jobStatsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), path, stat.Job, stat.Syscall)
-			ch <- prometheus.MustNewConstMetric(c.jobStatsSumMetric, prometheus.GaugeValue, float64(stat.Sum), path, stat.Job, stat.Syscall, stat.Unit)
-			ch <- prometheus.MustNewConstMetric(c.jobStatsSumsqMetric, prometheus.GaugeValue, float64(stat.SumSquared), path, stat.Job, stat.Syscall, stat.Unit)
-		}
-	}
-}
-
-// CollectBasicMetrics collects basic metrics
-func (c *JobStatsCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
-	if c.level == consts.Basic {
-		c.CollectStatMetrics(ch, c.jobStatsFilePatterns)
-	}
-}
-
-// CollectExtendedMetrics collects extended metrics
-func (c *JobStatsCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
-	if c.level == consts.Extended {
-		c.CollectStatMetrics(ch, c.jobStatsFilePatterns)
-	}
 }

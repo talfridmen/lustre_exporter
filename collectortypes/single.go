@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -14,13 +15,16 @@ import (
 type SingleCollector struct {
 	metric      *prometheus.Desc
 	filePattern string
+	fileRegex   regexp.Regexp
 	level       consts.Level
 }
 
-func NewSingleCollector(metric *prometheus.Desc, filePattern string, level consts.Level) *SingleCollector {
+func NewSingleCollector(metric *MetricInfo, filePattern string, FileRegex string, level consts.Level) *SingleCollector {
+	fileRegexp := *regexp.MustCompile(FileRegex)
 	return &SingleCollector{
-		metric:      metric,
+		metric:      metric.CreatePrometheusMetric([]string{}, fileRegexp),
 		filePattern: filePattern,
+		fileRegex:   fileRegexp,
 		level:       level,
 	}
 }
@@ -43,7 +47,7 @@ func (c *SingleCollector) CollectSSingleMetric(ch chan<- prometheus.Metric, patt
 		if err != nil {
 			fmt.Printf("got error while parsing line: %s\n", err)
 		}
-		ch <- prometheus.MustNewConstMetric(c.metric, prometheus.GaugeValue, float64(value), path)
+		ch <- prometheus.MustNewConstMetric(c.metric, prometheus.GaugeValue, float64(value), c.fileRegex.FindStringSubmatch(path)[1:]...)
 	}
 }
 

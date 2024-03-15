@@ -3,9 +3,13 @@ package collectors
 import (
 	"fmt"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/talfridmen/lustre_exporter/collectortypes"
 	"github.com/talfridmen/lustre_exporter/consts"
+)
+
+const (
+	mdtPathGlob = "mdt/*"
+	mdtPathReg  = `mdt/(?P<filsystem>.*)-(?P<mdt>MDT\d+)`
 )
 
 type MDTCollector struct {
@@ -19,33 +23,37 @@ func NewMDTCollector(name string, level string) *MDTCollector {
 			level: getCollectorLevel(name, level),
 			statsCollectors: []collectortypes.StatsCollector{
 				*collectortypes.NewStatsCollector(
-					prometheus.NewDesc("lustre_mdt_stats_samples", "number of samples of metadata operations", []string{"path", "stat_type"}, nil),
-					prometheus.NewDesc("lustre_mdt_stats_sum", "number of samples of metadata operations", []string{"path", "stat_type", "units"}, nil),
-					prometheus.NewDesc("lustre_mdt_stats_sumsq", "number of samples of metadata operations", []string{"path", "stat_type", "units"}, nil),
-					fmt.Sprintf("%s/mdt/*/md_stats", consts.ProcfsBaseDir),
+					collectortypes.NewMetricInfo("lustre_mdt_stats_samples", "number of samples of metadata operations"),
+					collectortypes.NewMetricInfo("lustre_mdt_stats_sum", "number of samples of metadata operations"),
+					collectortypes.NewMetricInfo("lustre_mdt_stats_sumsq", "number of samples of metadata operations"),
+					fmt.Sprintf("%s/%s/md_stats", consts.ProcfsBaseDir, mdtPathGlob),
+					fmt.Sprintf(`%s/%s/md_stats`, consts.ProcfsBaseDir, mdtPathReg),
 					consts.Basic,
 				),
 				*collectortypes.NewStatsCollector(
-					prometheus.NewDesc("lustre_mdt_export_stats_samples", "number of samples of metadata operations per export", []string{"path", "stat_type"}, nil),
-					prometheus.NewDesc("lustre_mdt_export_stats_sum", "number of samples of metadata operations per export", []string{"path", "stat_type", "units"}, nil),
-					prometheus.NewDesc("lustre_mdt_export_stats_sumsq", "number of samples of metadata operations per export", []string{"path", "stat_type", "units"}, nil),
-					fmt.Sprintf("%s/mdt/*/exports/*/stats", consts.ProcfsBaseDir),
+					collectortypes.NewMetricInfo("lustre_mdt_export_stats_samples", "number of samples of metadata operations per export"),
+					collectortypes.NewMetricInfo("lustre_mdt_export_stats_sum", "number of samples of metadata operations per export"),
+					collectortypes.NewMetricInfo("lustre_mdt_export_stats_sumsq", "number of samples of metadata operations per export"),
+					fmt.Sprintf("%s/%s/exports/*/stats", consts.ProcfsBaseDir, mdtPathGlob),
+					fmt.Sprintf(`%s/%s/exports/(?P<ip>[\d\.]+)@(?P<network>.*)/stats`, consts.ProcfsBaseDir, mdtPathReg),
 					consts.Extended,
 				),
 			},
 			singleCollectors: []collectortypes.SingleCollector{
 				*collectortypes.NewSingleCollector(
-					prometheus.NewDesc("lustre_mdt_num_exports", "number f exports an mdt has", []string{"path"}, nil),
-					fmt.Sprintf("%s/mdt/*/num_exports", consts.ProcfsBaseDir),
+					collectortypes.NewMetricInfo("lustre_mdt_num_exports", "number f exports an mdt has"),
+					fmt.Sprintf("%s/%s/num_exports", consts.ProcfsBaseDir, mdtPathGlob),
+					fmt.Sprintf(`%s/%s/num_exports`, consts.ProcfsBaseDir, mdtPathReg),
 					consts.Basic,
 				),
 			},
 			jobStatsCollectors: []collectortypes.JobStatsCollector{
 				*collectortypes.NewJobStatsCollector(
-					prometheus.NewDesc("lustre_mdt_job_stats_samples", "number of samples of metadata operations per job", []string{"path", "job", "stat_type"}, nil),
-					prometheus.NewDesc("lustre_mdt_job_stats_sum", "number of samples of metadata operations per job", []string{"path", "job", "stat_type", "units"}, nil),
-					prometheus.NewDesc("lustre_mdt_job_stats_sumsq", "number of samples of metadata operations per job", []string{"path", "job", "stat_type", "units"}, nil),
-					fmt.Sprintf("%s/mdt/*/job_stats", consts.ProcfsBaseDir),
+					collectortypes.NewMetricInfo("lustre_mdt_job_stats_samples", "number of samples of metadata operations per job"),
+					collectortypes.NewMetricInfo("lustre_mdt_job_stats_sum", "number of samples of metadata operations per job"),
+					collectortypes.NewMetricInfo("lustre_mdt_job_stats_sumsq", "number of samples of metadata operations per job"),
+					fmt.Sprintf("%s/%s/job_stats", consts.ProcfsBaseDir, mdtPathGlob),
+					fmt.Sprintf(`%s/%s/job_stats`, consts.ProcfsBaseDir, mdtPathReg),
 					consts.Extended,
 				),
 			},

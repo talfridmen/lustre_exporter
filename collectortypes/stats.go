@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -89,15 +90,18 @@ type StatsCollector struct {
 	statsSumMetric     *prometheus.Desc
 	statsSumsqMetric   *prometheus.Desc
 	statsFilePatterns  string
+	statsFileRegex     regexp.Regexp
 	level              consts.Level
 }
 
-func NewStatsCollector(statsSamplesMetric *prometheus.Desc, statsSumMetric *prometheus.Desc, statsSumsqMetric *prometheus.Desc, statsFilePatterns string, level consts.Level) *StatsCollector {
+func NewStatsCollector(statsSamplesMetric *MetricInfo, statsSumMetric *MetricInfo, statsSumsqMetric *MetricInfo, statsFilePatterns string, statsFileRegex string, level consts.Level) *StatsCollector {
+	statsFileRegexp := *regexp.MustCompile(statsFileRegex)
 	return &StatsCollector{
-		statsSamplesMetric: statsSamplesMetric,
-		statsSumMetric:     statsSumMetric,
-		statsSumsqMetric:   statsSumsqMetric,
+		statsSamplesMetric: statsSamplesMetric.CreatePrometheusMetric([]string{"syscall"}, statsFileRegexp),
+		statsSumMetric:     statsSumMetric.CreatePrometheusMetric([]string{"syscall", "units"}, statsFileRegexp),
+		statsSumsqMetric:   statsSumsqMetric.CreatePrometheusMetric([]string{"syscall", "units"}, statsFileRegexp),
 		statsFilePatterns:  statsFilePatterns,
+		statsFileRegex:     statsFileRegexp,
 		level:              level,
 	}
 }
@@ -114,6 +118,7 @@ func (c *StatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern
 		return
 	}
 	for _, path := range paths {
+		pathLabels := c.statsFileRegex.FindStringSubmatch(path)[1:]
 		value, err := os.ReadFile(filepath.Clean(path))
 		if err != nil || value == nil {
 			fmt.Printf("could not read stat file %s\n", path)
@@ -123,9 +128,9 @@ func (c *StatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern
 			fmt.Printf("got error while parsing line: %s\n", err)
 		}
 		for _, stat := range stats {
-			ch <- prometheus.MustNewConstMetric(c.statsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), path, stat.Syscall)
-			ch <- prometheus.MustNewConstMetric(c.statsSumMetric, prometheus.GaugeValue, float64(stat.Sum), path, stat.Syscall, stat.Unit)
-			ch <- prometheus.MustNewConstMetric(c.statsSumsqMetric, prometheus.GaugeValue, float64(stat.SumSquared), path, stat.Syscall, stat.Unit)
+			ch <- prometheus.MustNewConstMetric(c.statsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), append([]string{stat.Syscall}, pathLabels...)...)
+			ch <- prometheus.MustNewConstMetric(c.statsSumMetric, prometheus.GaugeValue, float64(stat.Sum), append([]string{stat.Syscall, stat.Unit}, pathLabels...)...)
+			ch <- prometheus.MustNewConstMetric(c.statsSumsqMetric, prometheus.GaugeValue, float64(stat.SumSquared), append([]string{stat.Syscall, stat.Unit}, pathLabels...)...)
 		}
 	}
 }
