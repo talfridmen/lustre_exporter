@@ -72,7 +72,7 @@ func (c *JobStatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, patt
 		pathLabels := c.jobStatsFileRegex.FindStringSubmatch(path)[1:]
 		value, err := os.ReadFile(filepath.Clean(path))
 		if err != nil || value == nil {
-			fmt.Printf("could not read stat file %s\n", path)
+			fmt.Printf("could not read jobstat file %s\n", path)
 		}
 		stats, err := ParseJobStat(string(value))
 		if err != nil {
