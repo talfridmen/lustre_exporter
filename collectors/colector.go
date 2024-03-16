@@ -17,12 +17,13 @@ type Collector interface {
 
 // Collector represents the interface for a collector
 type BaseCollector struct {
-	name               string
-	level              consts.Level
-	statsCollectors    []collectortypes.StatsCollector
-	singleCollectors   []collectortypes.SingleCollector
-	jobStatsCollectors []collectortypes.JobStatsCollector
-	quotaCollectors    []collectortypes.QuotaCollector
+	name                  string
+	level                 consts.Level
+	singleCollectors      []collectortypes.SingleCollector
+	multiMetricCollectors []collectortypes.MultiMetricCollector
+	statsCollectors       []collectortypes.StatsCollector
+	jobStatsCollectors    []collectortypes.JobStatsCollector
+	quotaCollectors       []collectortypes.QuotaCollector
 }
 
 // GetLevel returns the level of operation for the collector
@@ -31,11 +32,14 @@ func (c *BaseCollector) GetLevel() consts.Level {
 }
 
 func (c *BaseCollector) Describe(ch chan<- *prometheus.Desc) {
-	for _, statsCollector := range c.statsCollectors {
-		statsCollector.Describe(ch)
-	}
 	for _, singleCollector := range c.singleCollectors {
 		singleCollector.Describe(ch)
+	}
+	for _, multiMetricCollector := range c.multiMetricCollectors {
+		multiMetricCollector.Describe(ch)
+	}
+	for _, statsCollector := range c.statsCollectors {
+		statsCollector.Describe(ch)
 	}
 	for _, jobStatsCollector := range c.jobStatsCollectors {
 		jobStatsCollector.Describe(ch)
@@ -47,11 +51,14 @@ func (c *BaseCollector) Describe(ch chan<- *prometheus.Desc) {
 
 // CollectBasicMetrics collects basic metrics
 func (c *BaseCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
-	for _, statsCollector := range c.statsCollectors {
-		statsCollector.CollectBasicMetrics(ch)
-	}
 	for _, singleCollector := range c.singleCollectors {
 		singleCollector.CollectBasicMetrics(ch)
+	}
+	for _, multiMetricCollector := range c.multiMetricCollectors {
+		multiMetricCollector.CollectBasicMetrics(ch)
+	}
+	for _, statsCollector := range c.statsCollectors {
+		statsCollector.CollectBasicMetrics(ch)
 	}
 	for _, jobStatsCollector := range c.jobStatsCollectors {
 		jobStatsCollector.CollectBasicMetrics(ch)
@@ -63,11 +70,14 @@ func (c *BaseCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
 
 // CollectExtendedMetrics collects extended metrics
 func (c *BaseCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
-	for _, statsCollector := range c.statsCollectors {
-		statsCollector.CollectExtendedMetrics(ch)
-	}
 	for _, singleCollector := range c.singleCollectors {
 		singleCollector.CollectExtendedMetrics(ch)
+	}
+	for _, multiMetricCollector := range c.multiMetricCollectors {
+		multiMetricCollector.CollectExtendedMetrics(ch)
+	}
+	for _, statsCollector := range c.statsCollectors {
+		statsCollector.CollectExtendedMetrics(ch)
 	}
 	for _, jobStatsCollector := range c.jobStatsCollectors {
 		jobStatsCollector.CollectExtendedMetrics(ch)

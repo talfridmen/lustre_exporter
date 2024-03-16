@@ -33,7 +33,7 @@ func (x *SingleCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- x.metric
 }
 
-func (c *SingleCollector) CollectSSingleMetric(ch chan<- prometheus.Metric, pattern string) {
+func (c *SingleCollector) CollectSingleMetric(ch chan<- prometheus.Metric, pattern string) {
 	paths, _ := filepath.Glob(pattern)
 	if paths == nil {
 		return
@@ -54,13 +54,13 @@ func (c *SingleCollector) CollectSSingleMetric(ch chan<- prometheus.Metric, patt
 // CollectBasicMetrics collects basic metrics
 func (c *SingleCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
 	if c.level == consts.Basic {
-		c.CollectSSingleMetric(ch, c.filePattern)
+		c.CollectSingleMetric(ch, c.filePattern)
 	}
 }
 
 // CollectExtendedMetrics collects extended metrics
 func (c *SingleCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
 	if c.level == consts.Extended {
-		c.CollectSSingleMetric(ch, c.filePattern)
+		c.CollectSingleMetric(ch, c.filePattern)
 	}
 }
