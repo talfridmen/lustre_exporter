@@ -15,10 +15,10 @@ import (
 
 func main() {
 	// Define command-line flags
-	mdtLevel := flag.String("mdt", "extended", "Enable mdt collection (disabled,basic,extended)")
-	obdfilterLevel := flag.String("obdfilter", "extended", "Enable obdfilter collection (disabled,basic,extended)")
-	ldlmLevel := flag.String("ldlm", "extended", "Enable ldlm collection (disabled,basic,extended)")
-	clientLevel := flag.String("client", "extended", "Enable client collection (disabled,basic,extended)")
+	mdtLevel := flag.String("mdt", "disabled", "Enable mdt collection (disabled,basic,extended)")
+	obdfilterLevel := flag.String("obdfilter", "disabled", "Enable obdfilter collection (disabled,basic,extended)")
+	ldlmLevel := flag.String("ldlm", "disabled", "Enable ldlm collection (disabled,basic,extended)")
+	clientLevel := flag.String("client", "disabled", "Enable client collection (disabled,basic,extended)")
 	// Parse command-line flags
 	flag.Parse()
 
