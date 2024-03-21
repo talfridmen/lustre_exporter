@@ -41,36 +41,6 @@ func NewOBDFilterCollector(name string, level string) *OBDFilterCollector {
 			},
 			singleCollectors: []collectortypes.SingleCollector{
 				*collectortypes.NewSingleCollector(
-					collectortypes.NewMetricInfo("lustre_obdfilter_avail_kbytes", "ost space available for non-root users in kbytes"),
-					fmt.Sprintf("%s/%s/kbytesavail", consts.SysfsBaseDir, obdfilterPathGlob),
-					fmt.Sprintf(`%s/%s/kbytesavail`, consts.SysfsBaseDir, obdfilterPathReg),
-					consts.Basic,
-				),
-				*collectortypes.NewSingleCollector(
-					collectortypes.NewMetricInfo("lustre_obdfilter_free_kbytes", "ost free space in kbytes"),
-					fmt.Sprintf("%s/%s/kbytesfree", consts.SysfsBaseDir, obdfilterPathGlob),
-					fmt.Sprintf(`%s/%s/kbytesfree`, consts.SysfsBaseDir, obdfilterPathReg),
-					consts.Basic,
-				),
-				*collectortypes.NewSingleCollector(
-					collectortypes.NewMetricInfo("lustre_obdfilter_total_kbytes", "ost total space in kbytes"),
-					fmt.Sprintf("%s/%s/kbytestotal", consts.SysfsBaseDir, obdfilterPathGlob),
-					fmt.Sprintf(`%s/%s/kbytestotal`, consts.SysfsBaseDir, obdfilterPathReg),
-					consts.Basic,
-				),
-				*collectortypes.NewSingleCollector(
-					collectortypes.NewMetricInfo("lustre_obdfilter_files_free", "ost free inodes"),
-					fmt.Sprintf("%s/%s/filesfree", consts.SysfsBaseDir, obdfilterPathGlob),
-					fmt.Sprintf(`%s/%s/filesfree`, consts.SysfsBaseDir, obdfilterPathReg),
-					consts.Basic,
-				),
-				*collectortypes.NewSingleCollector(
-					collectortypes.NewMetricInfo("lustre_obdfilter_files_total", "ost total inodes"),
-					fmt.Sprintf("%s/%s/filestotal", consts.SysfsBaseDir, obdfilterPathGlob),
-					fmt.Sprintf(`%s/%s/filestotal`, consts.SysfsBaseDir, obdfilterPathReg),
-					consts.Basic,
-				),
-				*collectortypes.NewSingleCollector(
 					collectortypes.NewMetricInfo("lustre_obdfilter_brw_size_bytes", "ost bulk read/write size"),
 					fmt.Sprintf("%s/%s/brw_size", consts.ProcfsBaseDir, obdfilterPathGlob),
 					fmt.Sprintf(`%s/%s/brw_size`, consts.ProcfsBaseDir, obdfilterPathReg),
