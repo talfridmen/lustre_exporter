@@ -47,6 +47,16 @@ func ParseStats(input string) ([]Stat, error) {
 		}
 
 		unit := fields[3][1 : len(fields[3])-1] // Extracting unit from [usecs]
+
+		if len(fields) < 5 {
+			result = append(result, Stat{
+				Syscall:    syscall,
+				NumSamples: numSamples,
+				Unit:       unit,
+			})
+			continue
+		}
+
 		min, err := strconv.Atoi(fields[4])
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse min value: %v", err)
@@ -57,9 +67,32 @@ func ParseStats(input string) ([]Stat, error) {
 			return nil, fmt.Errorf("failed to parse max value: %v", err)
 		}
 
+		if len(fields) < 7 {
+			result = append(result, Stat{
+				Syscall:    syscall,
+				NumSamples: numSamples,
+				Unit:       unit,
+				Min:        min,
+				Max:        max,
+			})
+			continue
+		}
+
 		sum, err := strconv.Atoi(fields[6])
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse sum value: %v", err)
+		}
+
+		if len(fields) < 8 {
+			result = append(result, Stat{
+				Syscall:    syscall,
+				NumSamples: numSamples,
+				Unit:       unit,
+				Min:        min,
+				Max:        max,
+				Sum:        sum,
+			})
+			continue
 		}
 
 		sumSquared, err := strconv.Atoi(fields[7])

@@ -108,9 +108,9 @@ func ParseJobStat(input string) ([]JobStat, error) {
 		}
 
 		fields := strings.Fields(line)
-		if len(fields) < 15 {
-			return nil, fmt.Errorf("invalid input format: %s", line)
-		}
+		// if len(fields) < 15 {
+		// 	return nil, fmt.Errorf("invalid input format: %s", line)
+		// }
 
 		syscall := strings.TrimSuffix(fields[0], ":")
 
@@ -120,6 +120,17 @@ func ParseJobStat(input string) ([]JobStat, error) {
 		}
 
 		unit := strings.Trim(fields[5], ",")
+
+		if len(fields) < 8 {
+			result = append(result, JobStat{
+				Job:        job,
+				Syscall:    syscall,
+				NumSamples: numSamples,
+				Unit:       unit,
+			})
+			continue
+		}
+
 		min, err := strconv.Atoi(strings.Trim(fields[7], ","))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse min value: %v", err)
@@ -130,9 +141,34 @@ func ParseJobStat(input string) ([]JobStat, error) {
 			return nil, fmt.Errorf("failed to parse max value: %v", err)
 		}
 
+		if len(fields) < 12 {
+			result = append(result, JobStat{
+				Job:        job,
+				Syscall:    syscall,
+				NumSamples: numSamples,
+				Unit:       unit,
+				Min:        min,
+				Max:        max,
+			})
+			continue
+		}
+
 		sum, err := strconv.Atoi(strings.Trim(fields[11], ","))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse sum value: %v", err)
+		}
+
+		if len(fields) < 14 {
+			result = append(result, JobStat{
+				Job:        job,
+				Syscall:    syscall,
+				NumSamples: numSamples,
+				Unit:       unit,
+				Min:        min,
+				Max:        max,
+				Sum:        sum,
+			})
+			continue
 		}
 
 		sumSquared, err := strconv.Atoi(strings.Trim(fields[13], ","))
