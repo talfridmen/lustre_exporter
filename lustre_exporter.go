@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -51,7 +52,9 @@ func (e *Exporter) RegisterCollector(c collectors.Collector) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
+	fmt.Printf("Registering collector %s level %d...", c.GetName(), c.GetLevel())
 	e.collectors = append(e.collectors, c)
+	fmt.Printf("Success!\n")
 }
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {

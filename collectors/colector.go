@@ -13,6 +13,7 @@ type Collector interface {
 	CollectExtendedMetrics(ch chan<- prometheus.Metric)
 	Describe(ch chan<- *prometheus.Desc)
 	GetLevel() consts.Level
+	GetName() string
 }
 
 // Collector represents the interface for a collector
@@ -29,6 +30,10 @@ type BaseCollector struct {
 // GetLevel returns the level of operation for the collector
 func (c *BaseCollector) GetLevel() consts.Level {
 	return c.level
+}
+
+func (c *BaseCollector) GetName() string {
+	return c.name
 }
 
 func (c *BaseCollector) Describe(ch chan<- *prometheus.Desc) {

@@ -10,7 +10,7 @@ const (
 type Level int
 
 const (
-	Basic Level = iota
+	Disabled Level = iota
+	Basic
 	Extended
-	Disabled
 )
