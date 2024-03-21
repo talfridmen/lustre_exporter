@@ -95,6 +95,16 @@ func NewOBDFilterCollector(name string, level string) *OBDFilterCollector {
 					consts.Basic,
 				),
 			},
+			jobStatsCollectors: []collectortypes.JobStatsCollector{
+				*collectortypes.NewJobStatsCollector(
+					collectortypes.NewMetricInfo("lustre_obdfilter_job_stats_samples", "number of samples of data operations per job"),
+					collectortypes.NewMetricInfo("lustre_obdfilter_job_stats_sum", "number of samples of data operations per job"),
+					collectortypes.NewMetricInfo("lustre_obdfilter_job_stats_sumsq", "number of samples of data operations per job"),
+					fmt.Sprintf("%s/%s/job_stats", consts.ProcfsBaseDir, obdfilterPathGlob),
+					fmt.Sprintf(`%s/%s/job_stats`, consts.ProcfsBaseDir, obdfilterPathReg),
+					consts.Extended,
+				),
+			},
 			quotaCollectors: []collectortypes.QuotaCollector{
 				*collectortypes.NewQuotaCollector(
 					collectortypes.NewMetricInfo("lustre_data_quota_hard_user", "hard quota per user"),
