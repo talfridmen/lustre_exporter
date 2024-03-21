@@ -35,9 +35,6 @@ func ParseStats(input string) ([]Stat, error) {
 		}
 
 		fields := strings.Fields(line)
-		if len(fields) < 8 {
-			return nil, fmt.Errorf("invalid input format: %s", line)
-		}
 
 		syscall := fields[0]
 
