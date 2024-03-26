@@ -81,8 +81,8 @@ func (c *AcctCollector) CollectAcctMetrics(ch chan<- prometheus.Metric, pattern 
 }
 
 // ParseInput parses the input string and returns a slice of SampleData
-func ParseAccts(input string) ([]AcctEntry, error) {
-	var result []AcctEntry
+func ParseAccts(input string) (map[string]AcctEntry, error) {
+	var result map[string]AcctEntry = make(map[string]AcctEntry)
 
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	id := ""
@@ -113,11 +113,11 @@ func ParseAccts(input string) ([]AcctEntry, error) {
 			return nil, fmt.Errorf("failed to parse soft limit: %v", err)
 		}
 
-		result = append(result, AcctEntry{
+		result[id] = AcctEntry{
 			Id:     id,
 			inodes: inodes,
 			kbytes: kbytes,
-		})
+		}
 	}
 
 	if err := scanner.Err(); err != nil {

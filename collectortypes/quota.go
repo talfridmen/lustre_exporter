@@ -83,8 +83,8 @@ func (c *QuotaCollector) CollectQuotaMetrics(ch chan<- prometheus.Metric, patter
 }
 
 // ParseInput parses the input string and returns a slice of SampleData
-func ParseQuotas(input string) ([]QuotaEntry, error) {
-	var result []QuotaEntry
+func ParseQuotas(input string) (map[string]QuotaEntry, error) {
+	var result map[string]QuotaEntry = make(map[string]QuotaEntry)
 
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	id := ""
@@ -119,13 +119,13 @@ func ParseQuotas(input string) ([]QuotaEntry, error) {
 
 		time := strings.Trim(fields[9], ",")
 
-		result = append(result, QuotaEntry{
+		result[id] = QuotaEntry{
 			Id:        id,
 			hardLimit: hardLimit,
 			softLimit: softLimit,
 			granted:   granted,
 			time:      time,
-		})
+		}
 	}
 
 	if err := scanner.Err(); err != nil {

@@ -94,9 +94,11 @@ func (c *JobStatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, patt
 	}
 }
 
+type Key struct{ job, syscall string }
+
 // ParseInput parses the input string and returns a slice of SampleData
-func ParseJobStat(input string) ([]JobStat, error) {
-	var result []JobStat
+func ParseJobStat(input string) (map[Key]JobStat, error) {
+	var result map[Key]JobStat = map[Key]JobStat{}
 
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	job := ""
@@ -116,9 +118,6 @@ func ParseJobStat(input string) ([]JobStat, error) {
 		}
 
 		fields := strings.Fields(line)
-		// if len(fields) < 15 {
-		// 	return nil, fmt.Errorf("invalid input format: %s", line)
-		// }
 
 		syscall := strings.TrimSuffix(fields[0], ":")
 
@@ -130,12 +129,12 @@ func ParseJobStat(input string) ([]JobStat, error) {
 		unit := strings.Trim(fields[5], ",")
 
 		if len(fields) < 8 {
-			result = append(result, JobStat{
+			result[Key{job, syscall}] = JobStat{
 				Job:        job,
 				Syscall:    syscall,
 				NumSamples: numSamples,
 				Unit:       unit,
-			})
+			}
 			continue
 		}
 
@@ -150,14 +149,14 @@ func ParseJobStat(input string) ([]JobStat, error) {
 		}
 
 		if len(fields) < 12 {
-			result = append(result, JobStat{
+			result[Key{job, syscall}] = JobStat{
 				Job:        job,
 				Syscall:    syscall,
 				NumSamples: numSamples,
 				Unit:       unit,
 				Min:        min,
 				Max:        max,
-			})
+			}
 			continue
 		}
 
@@ -167,7 +166,7 @@ func ParseJobStat(input string) ([]JobStat, error) {
 		}
 
 		if len(fields) < 14 {
-			result = append(result, JobStat{
+			result[Key{job, syscall}] = JobStat{
 				Job:        job,
 				Syscall:    syscall,
 				NumSamples: numSamples,
@@ -175,7 +174,7 @@ func ParseJobStat(input string) ([]JobStat, error) {
 				Min:        min,
 				Max:        max,
 				Sum:        sum,
-			})
+			}
 			continue
 		}
 
@@ -184,7 +183,7 @@ func ParseJobStat(input string) ([]JobStat, error) {
 			return nil, fmt.Errorf("failed to parse sum squared value: %v", err)
 		}
 
-		result = append(result, JobStat{
+		result[Key{job, syscall}] = JobStat{
 			Job:        job,
 			Syscall:    syscall,
 			NumSamples: numSamples,
@@ -193,7 +192,7 @@ func ParseJobStat(input string) ([]JobStat, error) {
 			Max:        max,
 			Sum:        sum,
 			SumSquared: sumSquared,
-		})
+		}
 	}
 
 	if err := scanner.Err(); err != nil {

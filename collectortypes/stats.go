@@ -22,8 +22,8 @@ type Stat struct {
 }
 
 // ParseInput parses the input string and returns a slice of SampleData
-func ParseStats(input string) ([]Stat, error) {
-	var result []Stat
+func ParseStats(input string) (map[string]Stat, error) {
+	var result map[string]Stat = make(map[string]Stat)
 
 	scanner := bufio.NewScanner(strings.NewReader(input))
 
@@ -46,11 +46,11 @@ func ParseStats(input string) ([]Stat, error) {
 		unit := fields[3][1 : len(fields[3])-1] // Extracting unit from [usecs]
 
 		if len(fields) < 5 {
-			result = append(result, Stat{
+			result[syscall] = Stat{
 				Syscall:    syscall,
 				NumSamples: numSamples,
 				Unit:       unit,
-			})
+			}
 			continue
 		}
 
@@ -65,13 +65,13 @@ func ParseStats(input string) ([]Stat, error) {
 		}
 
 		if len(fields) < 7 {
-			result = append(result, Stat{
+			result[syscall] = Stat{
 				Syscall:    syscall,
 				NumSamples: numSamples,
 				Unit:       unit,
 				Min:        min,
 				Max:        max,
-			})
+			}
 			continue
 		}
 
@@ -81,14 +81,14 @@ func ParseStats(input string) ([]Stat, error) {
 		}
 
 		if len(fields) < 8 {
-			result = append(result, Stat{
+			result[syscall] = Stat{
 				Syscall:    syscall,
 				NumSamples: numSamples,
 				Unit:       unit,
 				Min:        min,
 				Max:        max,
 				Sum:        sum,
-			})
+			}
 			continue
 		}
 
@@ -97,7 +97,7 @@ func ParseStats(input string) ([]Stat, error) {
 			return nil, fmt.Errorf("failed to parse sum squared value: %v", err)
 		}
 
-		result = append(result, Stat{
+		result[syscall] = Stat{
 			Syscall:    syscall,
 			NumSamples: numSamples,
 			Unit:       unit,
@@ -105,7 +105,7 @@ func ParseStats(input string) ([]Stat, error) {
 			Max:        max,
 			Sum:        sum,
 			SumSquared: sumSquared,
-		})
+		}
 	}
 
 	if err := scanner.Err(); err != nil {
