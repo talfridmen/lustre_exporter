@@ -53,6 +53,29 @@ func NewOsdCollector(name string, level string) *OsdCollector {
 					consts.Basic,
 				),
 			},
+			acctCollectors: []collectortypes.AcctCollector{
+				*collectortypes.NewAcctCollector(
+					collectortypes.NewMetricInfo("lustre_osd_acct_user_inodes", "inode accounting per user"),
+					collectortypes.NewMetricInfo("lustre_osd_acct_user_kbytes", "size accounting per user in kbytes"),
+					fmt.Sprintf("%s/%s/quota_slave/acct_user", consts.ProcfsBaseDir, osdPathGlob),
+					fmt.Sprintf(`%s/%s/quota_slave/acct_user`, consts.ProcfsBaseDir, osdPathReg),
+					consts.Basic,
+				),
+				*collectortypes.NewAcctCollector(
+					collectortypes.NewMetricInfo("lustre_osd_acct_group_inodes", "inode accounting per group"),
+					collectortypes.NewMetricInfo("lustre_osd_acct_group_kbytes", "size accounting per group in kbytes"),
+					fmt.Sprintf("%s/%s/quota_slave/acct_group", consts.ProcfsBaseDir, osdPathGlob),
+					fmt.Sprintf(`%s/%s/quota_slave/acct_group`, consts.ProcfsBaseDir, osdPathReg),
+					consts.Basic,
+				),
+				*collectortypes.NewAcctCollector(
+					collectortypes.NewMetricInfo("lustre_osd_acct_project_inodes", "inode accounting per project"),
+					collectortypes.NewMetricInfo("lustre_osd_acct_project_kbytes", "size accounting per project in kbytes"),
+					fmt.Sprintf("%s/%s/quota_slave/acct_project", consts.ProcfsBaseDir, osdPathGlob),
+					fmt.Sprintf(`%s/%s/quota_slave/acct_project`, consts.ProcfsBaseDir, osdPathReg),
+					consts.Basic,
+				),
+			},
 		},
 	}
 }
