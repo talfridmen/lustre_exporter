@@ -15,6 +15,8 @@ import (
 
 type JobStatsCollector struct {
 	jobStatsSamplesMetric *prometheus.Desc
+	jobStatsMinMetric     *prometheus.Desc
+	jobStatsMaxMetric     *prometheus.Desc
 	jobStatsSumMetric     *prometheus.Desc
 	jobStatsSumsqMetric   *prometheus.Desc
 	jobStatsFilePatterns  string
@@ -31,10 +33,12 @@ type JobStat struct {
 	Min, Max, Sum, SumSquared int
 }
 
-func NewJobStatsCollector(jobStatsSamplesMetric *MetricInfo, jobStatsSumMetric *MetricInfo, jobStatsSumsqMetric *MetricInfo, jobStatsFilePatterns string, jobStatsFileRegex string, level consts.Level) *JobStatsCollector {
+func NewJobStatsCollector(jobStatsSamplesMetric *MetricInfo, jobStatsMinMetric *MetricInfo, jobStatsMaxMetric *MetricInfo, jobStatsSumMetric *MetricInfo, jobStatsSumsqMetric *MetricInfo, jobStatsFilePatterns string, jobStatsFileRegex string, level consts.Level) *JobStatsCollector {
 	jobStatsFileRegexp := *regexp.MustCompile(jobStatsFileRegex)
 	return &JobStatsCollector{
 		jobStatsSamplesMetric: jobStatsSamplesMetric.CreatePrometheusMetric([]string{"job", "stat_type"}, jobStatsFileRegexp),
+		jobStatsMinMetric:     jobStatsMinMetric.CreatePrometheusMetric([]string{"job", "stat_type", "units"}, jobStatsFileRegexp),
+		jobStatsMaxMetric:     jobStatsMaxMetric.CreatePrometheusMetric([]string{"job", "stat_type", "units"}, jobStatsFileRegexp),
 		jobStatsSumMetric:     jobStatsSumMetric.CreatePrometheusMetric([]string{"job", "stat_type", "units"}, jobStatsFileRegexp),
 		jobStatsSumsqMetric:   jobStatsSumsqMetric.CreatePrometheusMetric([]string{"job", "stat_type", "units"}, jobStatsFileRegexp),
 		jobStatsFilePatterns:  jobStatsFilePatterns,
@@ -45,6 +49,8 @@ func NewJobStatsCollector(jobStatsSamplesMetric *MetricInfo, jobStatsSumMetric *
 
 func (x *JobStatsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- x.jobStatsSamplesMetric
+	ch <- x.jobStatsMinMetric
+	ch <- x.jobStatsMaxMetric
 	ch <- x.jobStatsSumMetric
 	ch <- x.jobStatsSumsqMetric
 }
@@ -80,6 +86,8 @@ func (c *JobStatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, patt
 		}
 		for _, stat := range stats {
 			ch <- prometheus.MustNewConstMetric(c.jobStatsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), append([]string{stat.Job, stat.Syscall}, pathLabels...)...)
+			ch <- prometheus.MustNewConstMetric(c.jobStatsMinMetric, prometheus.GaugeValue, float64(stat.Min), append([]string{stat.Job, stat.Syscall, stat.Unit}, pathLabels...)...)
+			ch <- prometheus.MustNewConstMetric(c.jobStatsMaxMetric, prometheus.GaugeValue, float64(stat.Max), append([]string{stat.Job, stat.Syscall, stat.Unit}, pathLabels...)...)
 			ch <- prometheus.MustNewConstMetric(c.jobStatsSumMetric, prometheus.GaugeValue, float64(stat.Sum), append([]string{stat.Job, stat.Syscall, stat.Unit}, pathLabels...)...)
 			ch <- prometheus.MustNewConstMetric(c.jobStatsSumsqMetric, prometheus.GaugeValue, float64(stat.SumSquared), append([]string{stat.Job, stat.Syscall, stat.Unit}, pathLabels...)...)
 		}
