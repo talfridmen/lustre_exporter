@@ -1,0 +1,10 @@
+[Unit]
+Description=Lustre exporter for prometheus
+
+[Service]
+EnvironmentFile=-/etc/lustre_exporter.conf
+ExecStart=/usr/bin/lustre_exporter $OPTIONS
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
