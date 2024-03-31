@@ -36,7 +36,7 @@ func NewLdlmCollector(name string, level string) *LdlmCollector {
 				*collectortypes.NewSingleCollector(
 					collectortypes.NewMetricInfo("lustre_ldlm_ost_lock_count", "total number of locks for an ost"),
 					fmt.Sprintf("%s/ldlm/namespaces/filter-*/lock_count", consts.SysfsBaseDir),
-					fmt.Sprintf(`%s/ldlm/namespaces/filter-(?P<filesystem>.*)-(?P<ost>OST\d+)_UUID/lock_count`, consts.SysfsBaseDir),
+					fmt.Sprintf(`%s/ldlm/namespaces/filter-%s_UUID/lock_count`, consts.SysfsBaseDir, consts.OST_REG),
 					consts.Basic,
 				),
 			},
