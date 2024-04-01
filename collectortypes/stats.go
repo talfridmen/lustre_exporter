@@ -15,10 +15,10 @@ import (
 
 // SampleData represents the parsed information for each label
 type Stat struct {
-	Syscall                   string
-	NumSamples                int
-	Unit                      string
-	Min, Max, Sum, SumSquared int
+	Syscall    string
+	NumSamples int
+	Unit       string
+	Sum        int
 }
 
 // ParseInput parses the input string and returns a slice of SampleData
@@ -45,32 +45,11 @@ func ParseStats(input string) (map[string]Stat, error) {
 
 		unit := fields[3][1 : len(fields[3])-1] // Extracting unit from [usecs]
 
-		if len(fields) < 5 {
-			result[syscall] = Stat{
-				Syscall:    syscall,
-				NumSamples: numSamples,
-				Unit:       unit,
-			}
-			continue
-		}
-
-		min, err := strconv.Atoi(fields[4])
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse min value: %v", err)
-		}
-
-		max, err := strconv.Atoi(fields[5])
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse max value: %v", err)
-		}
-
 		if len(fields) < 7 {
 			result[syscall] = Stat{
 				Syscall:    syscall,
 				NumSamples: numSamples,
 				Unit:       unit,
-				Min:        min,
-				Max:        max,
 			}
 			continue
 		}
@@ -80,31 +59,11 @@ func ParseStats(input string) (map[string]Stat, error) {
 			return nil, fmt.Errorf("failed to parse sum value: %v", err)
 		}
 
-		if len(fields) < 8 {
-			result[syscall] = Stat{
-				Syscall:    syscall,
-				NumSamples: numSamples,
-				Unit:       unit,
-				Min:        min,
-				Max:        max,
-				Sum:        sum,
-			}
-			continue
-		}
-
-		sumSquared, err := strconv.Atoi(fields[7])
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse sum squared value: %v", err)
-		}
-
 		result[syscall] = Stat{
 			Syscall:    syscall,
 			NumSamples: numSamples,
 			Unit:       unit,
-			Min:        min,
-			Max:        max,
 			Sum:        sum,
-			SumSquared: sumSquared,
 		}
 	}
 
@@ -118,18 +77,16 @@ func ParseStats(input string) (map[string]Stat, error) {
 type StatsCollector struct {
 	statsSamplesMetric *prometheus.Desc
 	statsSumMetric     *prometheus.Desc
-	statsSumsqMetric   *prometheus.Desc
 	statsFilePatterns  string
 	statsFileRegex     regexp.Regexp
 	level              consts.Level
 }
 
-func NewStatsCollector(statsSamplesMetric *MetricInfo, statsSumMetric *MetricInfo, statsSumsqMetric *MetricInfo, statsFilePatterns string, statsFileRegex string, level consts.Level) *StatsCollector {
+func NewStatsCollector(statsSamplesMetric *MetricInfo, statsSumMetric *MetricInfo, statsFilePatterns string, statsFileRegex string, level consts.Level) *StatsCollector {
 	statsFileRegexp := *regexp.MustCompile(statsFileRegex)
 	return &StatsCollector{
 		statsSamplesMetric: statsSamplesMetric.CreatePrometheusMetric([]string{"syscall"}, statsFileRegexp),
 		statsSumMetric:     statsSumMetric.CreatePrometheusMetric([]string{"syscall", "units"}, statsFileRegexp),
-		statsSumsqMetric:   statsSumsqMetric.CreatePrometheusMetric([]string{"syscall", "units"}, statsFileRegexp),
 		statsFilePatterns:  statsFilePatterns,
 		statsFileRegex:     statsFileRegexp,
 		level:              level,
@@ -139,7 +96,6 @@ func NewStatsCollector(statsSamplesMetric *MetricInfo, statsSumMetric *MetricInf
 func (x *StatsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- x.statsSamplesMetric
 	ch <- x.statsSumMetric
-	ch <- x.statsSumsqMetric
 }
 
 func (c *StatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern string) {
@@ -160,7 +116,6 @@ func (c *StatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern
 		for _, stat := range stats {
 			ch <- prometheus.MustNewConstMetric(c.statsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), append([]string{stat.Syscall}, pathLabels...)...)
 			ch <- prometheus.MustNewConstMetric(c.statsSumMetric, prometheus.GaugeValue, float64(stat.Sum), append([]string{stat.Syscall, stat.Unit}, pathLabels...)...)
-			ch <- prometheus.MustNewConstMetric(c.statsSumsqMetric, prometheus.GaugeValue, float64(stat.SumSquared), append([]string{stat.Syscall, stat.Unit}, pathLabels...)...)
 		}
 	}
 }

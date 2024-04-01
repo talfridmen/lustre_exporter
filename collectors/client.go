@@ -33,7 +33,6 @@ func NewLliteCollector(name string, level string) *LliteCollector {
 				*collectortypes.NewStatsCollector(
 					collectortypes.NewMetricInfo("lustre_llite_stats_samples", "number of samples of metadata operations"),
 					collectortypes.NewMetricInfo("lustre_llite_stats_sum", "number of samples of metadata operations"),
-					collectortypes.NewMetricInfo("lustre_llite_stats_sumsq", "number of samples of metadata operations"),
 					fmt.Sprintf("%s/%s/stats", consts.KernelDebugBaseDir, llitePathGlob),
 					fmt.Sprintf(`%s/%s/stats`, consts.KernelDebugBaseDir, llitePathReg),
 					consts.Basic,

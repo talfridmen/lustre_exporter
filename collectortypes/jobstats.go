@@ -15,10 +15,7 @@ import (
 
 type JobStatsCollector struct {
 	jobStatsSamplesMetric *prometheus.Desc
-	jobStatsMinMetric     *prometheus.Desc
-	jobStatsMaxMetric     *prometheus.Desc
 	jobStatsSumMetric     *prometheus.Desc
-	jobStatsSumsqMetric   *prometheus.Desc
 	jobStatsFilePatterns  string
 	jobStatsFileRegex     regexp.Regexp
 	level                 consts.Level
@@ -33,14 +30,11 @@ type JobStat struct {
 	Min, Max, Sum, SumSquared int
 }
 
-func NewJobStatsCollector(jobStatsSamplesMetric *MetricInfo, jobStatsMinMetric *MetricInfo, jobStatsMaxMetric *MetricInfo, jobStatsSumMetric *MetricInfo, jobStatsSumsqMetric *MetricInfo, jobStatsFilePatterns string, jobStatsFileRegex string, level consts.Level) *JobStatsCollector {
+func NewJobStatsCollector(jobStatsSamplesMetric *MetricInfo, jobStatsSumMetric *MetricInfo, jobStatsFilePatterns string, jobStatsFileRegex string, level consts.Level) *JobStatsCollector {
 	jobStatsFileRegexp := *regexp.MustCompile(jobStatsFileRegex)
 	return &JobStatsCollector{
 		jobStatsSamplesMetric: jobStatsSamplesMetric.CreatePrometheusMetric([]string{"job", "stat_type"}, jobStatsFileRegexp),
-		jobStatsMinMetric:     jobStatsMinMetric.CreatePrometheusMetric([]string{"job", "stat_type", "units"}, jobStatsFileRegexp),
-		jobStatsMaxMetric:     jobStatsMaxMetric.CreatePrometheusMetric([]string{"job", "stat_type", "units"}, jobStatsFileRegexp),
 		jobStatsSumMetric:     jobStatsSumMetric.CreatePrometheusMetric([]string{"job", "stat_type", "units"}, jobStatsFileRegexp),
-		jobStatsSumsqMetric:   jobStatsSumsqMetric.CreatePrometheusMetric([]string{"job", "stat_type", "units"}, jobStatsFileRegexp),
 		jobStatsFilePatterns:  jobStatsFilePatterns,
 		jobStatsFileRegex:     jobStatsFileRegexp,
 		level:                 level,
@@ -49,10 +43,7 @@ func NewJobStatsCollector(jobStatsSamplesMetric *MetricInfo, jobStatsMinMetric *
 
 func (x *JobStatsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- x.jobStatsSamplesMetric
-	ch <- x.jobStatsMinMetric
-	ch <- x.jobStatsMaxMetric
 	ch <- x.jobStatsSumMetric
-	ch <- x.jobStatsSumsqMetric
 }
 
 // CollectBasicMetrics collects basic metrics
@@ -86,10 +77,7 @@ func (c *JobStatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, patt
 		}
 		for _, stat := range stats {
 			ch <- prometheus.MustNewConstMetric(c.jobStatsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), append([]string{stat.Job, stat.Syscall}, pathLabels...)...)
-			ch <- prometheus.MustNewConstMetric(c.jobStatsMinMetric, prometheus.GaugeValue, float64(stat.Min), append([]string{stat.Job, stat.Syscall, stat.Unit}, pathLabels...)...)
-			ch <- prometheus.MustNewConstMetric(c.jobStatsMaxMetric, prometheus.GaugeValue, float64(stat.Max), append([]string{stat.Job, stat.Syscall, stat.Unit}, pathLabels...)...)
 			ch <- prometheus.MustNewConstMetric(c.jobStatsSumMetric, prometheus.GaugeValue, float64(stat.Sum), append([]string{stat.Job, stat.Syscall, stat.Unit}, pathLabels...)...)
-			ch <- prometheus.MustNewConstMetric(c.jobStatsSumsqMetric, prometheus.GaugeValue, float64(stat.SumSquared), append([]string{stat.Job, stat.Syscall, stat.Unit}, pathLabels...)...)
 		}
 	}
 }
@@ -128,34 +116,12 @@ func ParseJobStat(input string) (map[Key]JobStat, error) {
 
 		unit := strings.Trim(fields[5], ",")
 
-		if len(fields) < 8 {
-			result[Key{job, syscall}] = JobStat{
-				Job:        job,
-				Syscall:    syscall,
-				NumSamples: numSamples,
-				Unit:       unit,
-			}
-			continue
-		}
-
-		min, err := strconv.Atoi(strings.Trim(fields[7], ","))
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse min value: %v", err)
-		}
-
-		max, err := strconv.Atoi(strings.Trim(fields[9], ","))
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse max value: %v", err)
-		}
-
 		if len(fields) < 12 {
 			result[Key{job, syscall}] = JobStat{
 				Job:        job,
 				Syscall:    syscall,
 				NumSamples: numSamples,
 				Unit:       unit,
-				Min:        min,
-				Max:        max,
 			}
 			continue
 		}
@@ -165,33 +131,12 @@ func ParseJobStat(input string) (map[Key]JobStat, error) {
 			return nil, fmt.Errorf("failed to parse sum value: %v", err)
 		}
 
-		if len(fields) < 14 {
-			result[Key{job, syscall}] = JobStat{
-				Job:        job,
-				Syscall:    syscall,
-				NumSamples: numSamples,
-				Unit:       unit,
-				Min:        min,
-				Max:        max,
-				Sum:        sum,
-			}
-			continue
-		}
-
-		sumSquared, err := strconv.Atoi(strings.Trim(fields[13], ","))
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse sum squared value: %v", err)
-		}
-
 		result[Key{job, syscall}] = JobStat{
 			Job:        job,
 			Syscall:    syscall,
 			NumSamples: numSamples,
 			Unit:       unit,
-			Min:        min,
-			Max:        max,
 			Sum:        sum,
-			SumSquared: sumSquared,
 		}
 	}
 

@@ -25,7 +25,6 @@ func NewOBDFilterCollector(name string, level string) *OBDFilterCollector {
 				*collectortypes.NewStatsCollector(
 					collectortypes.NewMetricInfo("lustre_obdfilter_stats_samples", "number of samples of metadata operations"),
 					collectortypes.NewMetricInfo("lustre_obdfilter_stats_sum", "sum of sample sizes of metadata operations"),
-					collectortypes.NewMetricInfo("lustre_obdfilter_stats_sumsq", "sum squares of sample sizes of metadata operations"),
 					fmt.Sprintf("%s/%s/stats", consts.ProcfsBaseDir, obdfilterPathGlob),
 					fmt.Sprintf(`%s/%s/stats`, consts.ProcfsBaseDir, obdfilterPathReg),
 					consts.Basic,
@@ -33,7 +32,6 @@ func NewOBDFilterCollector(name string, level string) *OBDFilterCollector {
 				*collectortypes.NewStatsCollector(
 					collectortypes.NewMetricInfo("lustre_obdfilter_export_stats_samples", "number of samples of data operations per export"),
 					collectortypes.NewMetricInfo("lustre_obdfilter_export_stats_sum", "sum of sample sizes of data operations per export"),
-					collectortypes.NewMetricInfo("lustre_obdfilter_export_stats_sumsq", "sum squares of sample sizes of data operations per export"),
 					fmt.Sprintf("%s/%s/exports/*/stats", consts.ProcfsBaseDir, obdfilterPathGlob),
 					fmt.Sprintf(`%s/%s/exports/(?P<ip>[\d\.]+)@(?P<network>.*)/stats`, consts.ProcfsBaseDir, obdfilterPathReg),
 					consts.Extended,
@@ -68,10 +66,7 @@ func NewOBDFilterCollector(name string, level string) *OBDFilterCollector {
 			jobStatsCollectors: []collectortypes.JobStatsCollector{
 				*collectortypes.NewJobStatsCollector(
 					collectortypes.NewMetricInfo("lustre_obdfilter_job_stats_samples", "number of samples of data operations per job"),
-					collectortypes.NewMetricInfo("lustre_obdfilter_job_stats_min", "minimum sample size of data operations per job"),
-					collectortypes.NewMetricInfo("lustre_obdfilter_job_stats_max", "maximum sample size of data operations per job"),
 					collectortypes.NewMetricInfo("lustre_obdfilter_job_stats_sum", "sum of sample sizes of data operations per job"),
-					collectortypes.NewMetricInfo("lustre_obdfilter_job_stats_sumsq", "sum of sqaures of sample sizes of data operations per job"),
 					fmt.Sprintf("%s/%s/job_stats", consts.ProcfsBaseDir, obdfilterPathGlob),
 					fmt.Sprintf(`%s/%s/job_stats`, consts.ProcfsBaseDir, obdfilterPathReg),
 					consts.Extended,

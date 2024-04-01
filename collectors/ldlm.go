@@ -20,7 +20,6 @@ func NewLdlmCollector(name string, level string) *LdlmCollector {
 				*collectortypes.NewStatsCollector(
 					collectortypes.NewMetricInfo("lustre_ldlm_cancel_samples", "number of samples of metadata operations"),
 					collectortypes.NewMetricInfo("lustre_ldlm_cancel_sum", "number of samples of metadata operations"),
-					collectortypes.NewMetricInfo("lustre_ldlm_cancel_sumsq", "number of samples of metadata operations"),
 					fmt.Sprintf("%s/ldlm/services/ldlm_canceld/stats", consts.KernelDebugBaseDir),
 					fmt.Sprintf(`%s/ldlm/services/ldlm_canceld/stats`, consts.KernelDebugBaseDir),
 					consts.Extended,
