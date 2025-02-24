@@ -15,6 +15,7 @@ import (
 )
 
 func main() {
+	port := flag.Int("port", 9090, "Port to expose metrics on (defaults to 9090)")
 	// Define command-line flags
 	mdtLevel := flag.String("mdt", "disabled", "Enable mdt collection (disabled,basic,extended)")
 	obdfilterLevel := flag.String("obdfilter", "disabled", "Enable obdfilter collection (disabled,basic,extended)")
@@ -35,7 +36,7 @@ func main() {
 	exporter.RegisterCollector(collectors.NewLliteCollector("client", *clientLevel))
 
 	// Start the exporter
-	exporter.Start(":9090")
+	exporter.Start(fmt.Sprintf(`:%d`, *port))
 }
 
 // Exporter represents the Prometheus exporter

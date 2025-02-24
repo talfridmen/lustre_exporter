@@ -46,14 +46,14 @@ func NewOBDFilterCollector(name string, level string) *OBDFilterCollector {
 				),
 				*collectortypes.NewSingleCollector(
 					collectortypes.NewMetricInfo("lustre_obdfilter_job_cleanup_interval_seconds", "the timeout for which an inactive job will be removed from memory"),
-					fmt.Sprintf("%s/%s/job_cleanup_interval", consts.ProcfsBaseDir, obdfilterPathGlob),
-					fmt.Sprintf(`%s/%s/job_cleanup_interval`, consts.ProcfsBaseDir, obdfilterPathReg),
+					fmt.Sprintf("%s/%s/job_cleanup_interval", consts.SysfsBaseDir, obdfilterPathGlob),
+					fmt.Sprintf(`%s/%s/job_cleanup_interval`, consts.SysfsBaseDir, obdfilterPathReg),
 					consts.Basic,
 				),
 				*collectortypes.NewSingleCollector(
 					collectortypes.NewMetricInfo("lustre_obdfilter_exports_count", "number of times an ost is exported"),
-					fmt.Sprintf("%s/%s/num_exports", consts.ProcfsBaseDir, obdfilterPathGlob),
-					fmt.Sprintf(`%s/%s/num_exports`, consts.ProcfsBaseDir, obdfilterPathReg),
+					fmt.Sprintf("%s/%s/num_exports", consts.SysfsBaseDir, obdfilterPathGlob),
+					fmt.Sprintf(`%s/%s/num_exports`, consts.SysfsBaseDir, obdfilterPathReg),
 					consts.Basic,
 				),
 				*collectortypes.NewSingleCollector(

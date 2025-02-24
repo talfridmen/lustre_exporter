@@ -40,8 +40,8 @@ func NewMDTCollector(name string, level string) *MDTCollector {
 			singleCollectors: []collectortypes.SingleCollector{
 				*collectortypes.NewSingleCollector(
 					collectortypes.NewMetricInfo("lustre_mdt_num_exports", "number of exports an mdt has"),
-					fmt.Sprintf("%s/%s/num_exports", consts.ProcfsBaseDir, mdtPathGlob),
-					fmt.Sprintf(`%s/%s/num_exports`, consts.ProcfsBaseDir, mdtPathReg),
+					fmt.Sprintf("%s/%s/num_exports", consts.SysfsBaseDir, mdtPathGlob),
+					fmt.Sprintf(`%s/%s/num_exports`, consts.SysfsBaseDir, mdtPathReg),
 					consts.Basic,
 				),
 			},

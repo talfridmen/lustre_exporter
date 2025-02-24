@@ -114,6 +114,10 @@ func ParseJobStat(input string) (map[Key]JobStat, error) {
 			return nil, fmt.Errorf("failed to parse number of samples: %v", err)
 		}
 
+		if numSamples == 0 {
+			continue
+		}
+
 		unit := strings.Trim(fields[5], ",")
 
 		if len(fields) < 12 {
