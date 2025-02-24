@@ -3,6 +3,8 @@ package collectors
 import (
 	"fmt"
 
+	"gopkg.in/ini.v1"
+
 	"github.com/talfridmen/lustre_exporter/collectortypes"
 	"github.com/talfridmen/lustre_exporter/consts"
 )
@@ -16,17 +18,17 @@ type LliteCollector struct {
 	BaseCollector
 }
 
-func NewLliteCollector(name string, level string) *LliteCollector {
+func NewLliteCollector(name string, config *ini.Section) *LliteCollector {
 	return &LliteCollector{
 		BaseCollector: BaseCollector{
 			name:  name,
-			level: getCollectorLevel(name, level),
+			config: *config,
 			multiMetricCollectors: []collectortypes.MultiMetricCollector{
 				*collectortypes.NewMultiMetricCollector(
 					collectortypes.NewMetricInfo("lustre_llite_cache", "info about lustre client cache"),
 					fmt.Sprintf("%s/%s/max_cached_mb", consts.KernelDebugBaseDir, llitePathGlob),
 					fmt.Sprintf("%s/%s/max_cached_mb", consts.KernelDebugBaseDir, llitePathReg),
-					consts.Basic,
+					"cache",
 				),
 			},
 			statsCollectors: []collectortypes.StatsCollector{
@@ -35,7 +37,7 @@ func NewLliteCollector(name string, level string) *LliteCollector {
 					collectortypes.NewMetricInfo("lustre_llite_stats_sum", "number of samples of metadata operations"),
 					fmt.Sprintf("%s/%s/stats", consts.KernelDebugBaseDir, llitePathGlob),
 					fmt.Sprintf(`%s/%s/stats`, consts.KernelDebugBaseDir, llitePathReg),
-					consts.Basic,
+					"stats",
 				),
 			},
 		},

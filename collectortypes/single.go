@@ -9,28 +9,32 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/talfridmen/lustre_exporter/consts"
 )
 
 type SingleCollector struct {
 	metric      *prometheus.Desc
 	filePattern string
 	fileRegex   regexp.Regexp
-	level       consts.Level
+	BaseCollector
 }
 
-func NewSingleCollector(metric *MetricInfo, filePattern string, FileRegex string, level consts.Level) *SingleCollector {
+func NewSingleCollector(metric *MetricInfo, filePattern string, FileRegex string, configName string) *SingleCollector {
 	fileRegexp := *regexp.MustCompile(FileRegex)
 	return &SingleCollector{
 		metric:      metric.CreatePrometheusMetric([]string{}, fileRegexp),
 		filePattern: filePattern,
 		fileRegex:   fileRegexp,
-		level:       level,
+		BaseCollector: BaseCollector{configKey: configName},
 	}
 }
 
 func (x *SingleCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- x.metric
+}
+
+// CollectMetrics collects metrics
+func (c *SingleCollector) CollectMetrics(ch chan<- prometheus.Metric) {
+	c.CollectSingleMetric(ch, c.filePattern)
 }
 
 func (c *SingleCollector) CollectSingleMetric(ch chan<- prometheus.Metric, pattern string) {
@@ -48,19 +52,5 @@ func (c *SingleCollector) CollectSingleMetric(ch chan<- prometheus.Metric, patte
 			fmt.Printf("got error while parsing line: %s\n", err)
 		}
 		ch <- prometheus.MustNewConstMetric(c.metric, prometheus.GaugeValue, float64(value), c.fileRegex.FindStringSubmatch(path)[1:]...)
-	}
-}
-
-// CollectBasicMetrics collects basic metrics
-func (c *SingleCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
-	if c.level == consts.Basic {
-		c.CollectSingleMetric(ch, c.filePattern)
-	}
-}
-
-// CollectExtendedMetrics collects extended metrics
-func (c *SingleCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
-	if c.level == consts.Extended {
-		c.CollectSingleMetric(ch, c.filePattern)
 	}
 }

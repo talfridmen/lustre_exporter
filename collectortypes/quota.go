@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/talfridmen/lustre_exporter/consts"
 )
 
 type QuotaCollector struct {
@@ -18,7 +17,7 @@ type QuotaCollector struct {
 	QuotaSoftMetric   *prometheus.Desc
 	quotaFilePatterns string
 	quotaFileRegex    regexp.Regexp
-	level             consts.Level
+	BaseCollector
 }
 
 // SampleData represents the parsed information for each label
@@ -30,14 +29,14 @@ type QuotaEntry struct {
 	time      string
 }
 
-func NewQuotaCollector(QuotaHardMetric *MetricInfo, QuotaSoftMetric *MetricInfo, quotaFilePatterns string, quotaFileRegex string, level consts.Level) *QuotaCollector {
+func NewQuotaCollector(QuotaHardMetric *MetricInfo, QuotaSoftMetric *MetricInfo, quotaFilePatterns string, quotaFileRegex string, configName string) *QuotaCollector {
 	quotaFileRegexp := *regexp.MustCompile(quotaFileRegex)
 	return &QuotaCollector{
 		QuotaHardMetric:   QuotaHardMetric.CreatePrometheusMetric([]string{"id", "granted", "time"}, quotaFileRegexp),
 		QuotaSoftMetric:   QuotaSoftMetric.CreatePrometheusMetric([]string{"id", "granted", "time"}, quotaFileRegexp),
 		quotaFilePatterns: quotaFilePatterns,
 		quotaFileRegex:    quotaFileRegexp,
-		level:             level,
+		BaseCollector: BaseCollector{configKey: configName},
 	}
 }
 
@@ -46,18 +45,9 @@ func (x *QuotaCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- x.QuotaSoftMetric
 }
 
-// CollectBasicMetrics collects basic metrics
-func (c *QuotaCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
-	if c.level == consts.Basic {
-		c.CollectQuotaMetrics(ch, c.quotaFilePatterns)
-	}
-}
-
-// CollectExtendedMetrics collects extended metrics
-func (c *QuotaCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
-	if c.level == consts.Extended {
-		c.CollectQuotaMetrics(ch, c.quotaFilePatterns)
-	}
+// CollectMetrics collects metrics
+func (c *QuotaCollector) CollectMetrics(ch chan<- prometheus.Metric) {
+	c.CollectQuotaMetrics(ch, c.quotaFilePatterns)
 }
 
 func (c *QuotaCollector) CollectQuotaMetrics(ch chan<- prometheus.Metric, pattern string) {

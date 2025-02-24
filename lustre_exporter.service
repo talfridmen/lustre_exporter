@@ -2,8 +2,7 @@
 Description=Lustre exporter for prometheus
 
 [Service]
-EnvironmentFile=-/etc/lustre_exporter.conf
-ExecStart=/usr/bin/lustre_exporter $OPTIONS
+ExecStart=/usr/bin/lustre_exporter --port 9090 --config /etc/lustre_exporter.ini
 Restart=on-failure
 
 [Install]

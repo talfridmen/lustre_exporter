@@ -6,6 +6,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+type BaseCollector struct {
+	configKey       string
+}
+
 type MetricInfo struct {
 	name string
 	help string
@@ -26,4 +30,8 @@ func (m *MetricInfo) CreatePrometheusMetric(defaultLabels []string, pathReg rege
 		append(defaultLabels, pathLabels...),
 		nil,
 	)
+}
+
+func (c *BaseCollector) GetConfigKey() string {
+	return c.configKey
 }

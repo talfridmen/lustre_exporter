@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/talfridmen/lustre_exporter/consts"
 )
 
 // SampleData represents the parsed information for each label
@@ -19,6 +18,35 @@ type Stat struct {
 	NumSamples int
 	Unit       string
 	Sum        int
+}
+
+type StatsCollector struct {
+	statsSamplesMetric *prometheus.Desc
+	statsSumMetric     *prometheus.Desc
+	statsFilePatterns  string
+	statsFileRegex     regexp.Regexp
+	BaseCollector
+}
+
+func NewStatsCollector(statsSamplesMetric *MetricInfo, statsSumMetric *MetricInfo, statsFilePatterns string, statsFileRegex string, configName string) *StatsCollector {
+	statsFileRegexp := *regexp.MustCompile(statsFileRegex)
+	return &StatsCollector{
+		statsSamplesMetric: statsSamplesMetric.CreatePrometheusMetric([]string{"syscall"}, statsFileRegexp),
+		statsSumMetric:     statsSumMetric.CreatePrometheusMetric([]string{"syscall", "units"}, statsFileRegexp),
+		statsFilePatterns:  statsFilePatterns,
+		statsFileRegex:     statsFileRegexp,
+		BaseCollector: BaseCollector{configKey: configName},
+	}
+}
+
+func (x *StatsCollector) Describe(ch chan<- *prometheus.Desc) {
+	ch <- x.statsSamplesMetric
+	ch <- x.statsSumMetric
+}
+
+// CollectMetrics collects metrics
+func (c *StatsCollector) CollectMetrics(ch chan<- prometheus.Metric) {
+	c.CollectStatMetrics(ch, c.statsFilePatterns)
 }
 
 // ParseInput parses the input string and returns a slice of SampleData
@@ -74,29 +102,6 @@ func ParseStats(input string) (map[string]Stat, error) {
 	return result, nil
 }
 
-type StatsCollector struct {
-	statsSamplesMetric *prometheus.Desc
-	statsSumMetric     *prometheus.Desc
-	statsFilePatterns  string
-	statsFileRegex     regexp.Regexp
-	level              consts.Level
-}
-
-func NewStatsCollector(statsSamplesMetric *MetricInfo, statsSumMetric *MetricInfo, statsFilePatterns string, statsFileRegex string, level consts.Level) *StatsCollector {
-	statsFileRegexp := *regexp.MustCompile(statsFileRegex)
-	return &StatsCollector{
-		statsSamplesMetric: statsSamplesMetric.CreatePrometheusMetric([]string{"syscall"}, statsFileRegexp),
-		statsSumMetric:     statsSumMetric.CreatePrometheusMetric([]string{"syscall", "units"}, statsFileRegexp),
-		statsFilePatterns:  statsFilePatterns,
-		statsFileRegex:     statsFileRegexp,
-		level:              level,
-	}
-}
-
-func (x *StatsCollector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- x.statsSamplesMetric
-	ch <- x.statsSumMetric
-}
 
 func (c *StatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern string) {
 	paths, _ := filepath.Glob(pattern)
@@ -117,19 +122,5 @@ func (c *StatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern
 			ch <- prometheus.MustNewConstMetric(c.statsSamplesMetric, prometheus.GaugeValue, float64(stat.NumSamples), append([]string{stat.Syscall}, pathLabels...)...)
 			ch <- prometheus.MustNewConstMetric(c.statsSumMetric, prometheus.GaugeValue, float64(stat.Sum), append([]string{stat.Syscall, stat.Unit}, pathLabels...)...)
 		}
-	}
-}
-
-// CollectBasicMetrics collects basic metrics
-func (c *StatsCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
-	if c.level == consts.Basic {
-		c.CollectStatMetrics(ch, c.statsFilePatterns)
-	}
-}
-
-// CollectExtendedMetrics collects extended metrics
-func (c *StatsCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
-	if c.level == consts.Extended {
-		c.CollectStatMetrics(ch, c.statsFilePatterns)
 	}
 }

@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/talfridmen/lustre_exporter/consts"
+	// "github.com/talfridmen/lustre_exporter/consts"
 )
 
 type JobStatsCollector struct {
@@ -18,7 +18,7 @@ type JobStatsCollector struct {
 	jobStatsSumMetric     *prometheus.Desc
 	jobStatsFilePatterns  string
 	jobStatsFileRegex     regexp.Regexp
-	level                 consts.Level
+	BaseCollector
 }
 
 // SampleData represents the parsed information for each label
@@ -30,14 +30,14 @@ type JobStat struct {
 	Min, Max, Sum, SumSquared int
 }
 
-func NewJobStatsCollector(jobStatsSamplesMetric *MetricInfo, jobStatsSumMetric *MetricInfo, jobStatsFilePatterns string, jobStatsFileRegex string, level consts.Level) *JobStatsCollector {
+func NewJobStatsCollector(jobStatsSamplesMetric *MetricInfo, jobStatsSumMetric *MetricInfo, jobStatsFilePatterns string, jobStatsFileRegex string, configName string) *JobStatsCollector {
 	jobStatsFileRegexp := *regexp.MustCompile(jobStatsFileRegex)
 	return &JobStatsCollector{
 		jobStatsSamplesMetric: jobStatsSamplesMetric.CreatePrometheusMetric([]string{"job", "stat_type"}, jobStatsFileRegexp),
 		jobStatsSumMetric:     jobStatsSumMetric.CreatePrometheusMetric([]string{"job", "stat_type", "units"}, jobStatsFileRegexp),
 		jobStatsFilePatterns:  jobStatsFilePatterns,
 		jobStatsFileRegex:     jobStatsFileRegexp,
-		level:                 level,
+		BaseCollector: BaseCollector{configKey: configName},
 	}
 }
 
@@ -46,18 +46,9 @@ func (x *JobStatsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- x.jobStatsSumMetric
 }
 
-// CollectBasicMetrics collects basic metrics
-func (c *JobStatsCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
-	if c.level == consts.Basic {
-		c.CollectStatMetrics(ch, c.jobStatsFilePatterns)
-	}
-}
-
-// CollectExtendedMetrics collects extended metrics
-func (c *JobStatsCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
-	if c.level == consts.Extended {
-		c.CollectStatMetrics(ch, c.jobStatsFilePatterns)
-	}
+// CollectMetrics collects metrics
+func (c *JobStatsCollector) CollectMetrics(ch chan<- prometheus.Metric) {
+	c.CollectStatMetrics(ch, c.jobStatsFilePatterns)
 }
 
 func (c *JobStatsCollector) CollectStatMetrics(ch chan<- prometheus.Metric, pattern string) {

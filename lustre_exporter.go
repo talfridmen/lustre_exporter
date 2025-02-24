@@ -6,34 +6,36 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"os"
+
+	"gopkg.in/ini.v1"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/talfridmen/lustre_exporter/collectors"
-	"github.com/talfridmen/lustre_exporter/consts"
 )
 
 func main() {
 	port := flag.Int("port", 9090, "Port to expose metrics on (defaults to 9090)")
-	// Define command-line flags
-	mdtLevel := flag.String("mdt", "disabled", "Enable mdt collection (disabled,basic,extended)")
-	obdfilterLevel := flag.String("obdfilter", "disabled", "Enable obdfilter collection (disabled,basic,extended)")
-	osdLevel := flag.String("osd", "disabled", "Enable osd collection (disabled,basic,extended)")
-	ldlmLevel := flag.String("ldlm", "disabled", "Enable ldlm collection (disabled,basic,extended)")
-	clientLevel := flag.String("client", "disabled", "Enable client collection (disabled,basic,extended)")
-	// Parse command-line flags
+	config := flag.String("config", "/etc/lustre_exporter.ini", "configuration file path")
 	flag.Parse()
+
+	inidata, err := ini.Load(*config)
+	if err != nil {
+		fmt.Printf("Fail to read ini file: %v", err)
+		os.Exit(1)
+	}
 
 	// Create a new exporter
 	exporter := NewExporter()
 
 	// Register collectors with user-specified levels
-	exporter.RegisterCollector(collectors.NewMDTCollector("mdt", *mdtLevel))
-	exporter.RegisterCollector(collectors.NewOBDFilterCollector("obdfilter", *obdfilterLevel))
-	exporter.RegisterCollector(collectors.NewOsdCollector("osd", *osdLevel))
-	exporter.RegisterCollector(collectors.NewLdlmCollector("ldlm", *ldlmLevel))
-	exporter.RegisterCollector(collectors.NewLliteCollector("client", *clientLevel))
+	exporter.RegisterCollector(collectors.NewMDTCollector("mdt", inidata.Section("mdt")))
+	exporter.RegisterCollector(collectors.NewOBDFilterCollector("obdfilter", inidata.Section("obdfilter")))
+	exporter.RegisterCollector(collectors.NewOsdCollector("osd", inidata.Section("osd")))
+	exporter.RegisterCollector(collectors.NewLdlmCollector("ldlm", inidata.Section("ldlm")))
+	exporter.RegisterCollector(collectors.NewLliteCollector("client", inidata.Section("client")))
 
 	// Start the exporter
 	exporter.Start(fmt.Sprintf(`:%d`, *port))
@@ -55,7 +57,7 @@ func (e *Exporter) RegisterCollector(c collectors.Collector) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	fmt.Printf("Registering collector %s level %d...", c.GetName(), c.GetLevel())
+	fmt.Printf("Registering collector %s... ", c.GetName())
 	e.collectors = append(e.collectors, c)
 	fmt.Printf("Success!\n")
 }
@@ -66,14 +68,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	for _, c := range e.collectors {
 		go func(collector collectors.Collector) {
 			defer wg.Done()
-			switch collector.GetLevel() {
-			case consts.Disabled:
-			case consts.Basic:
-				collector.CollectBasicMetrics(ch)
-			case consts.Extended:
-				collector.CollectBasicMetrics(ch)
-				collector.CollectExtendedMetrics(ch)
-			}
+			collector.CollectMetrics(ch)
 		}(c)
 	}
 	wg.Wait()

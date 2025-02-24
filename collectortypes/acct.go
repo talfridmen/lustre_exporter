@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/talfridmen/lustre_exporter/consts"
 )
 
 type AcctCollector struct {
@@ -18,7 +17,7 @@ type AcctCollector struct {
 	AcctKbytesMetric *prometheus.Desc
 	acctFilePatterns string
 	acctFileRegex    regexp.Regexp
-	level            consts.Level
+	BaseCollector
 }
 
 // SampleData represents the parsed information for each label
@@ -28,14 +27,14 @@ type AcctEntry struct {
 	kbytes int
 }
 
-func NewAcctCollector(AcctInodesMetric *MetricInfo, AcctKbytesMetric *MetricInfo, acctFilePatterns string, acctFileRegex string, level consts.Level) *AcctCollector {
+func NewAcctCollector(AcctInodesMetric *MetricInfo, AcctKbytesMetric *MetricInfo, acctFilePatterns string, acctFileRegex string, configKey string) *AcctCollector {
 	acctFileRegexp := *regexp.MustCompile(acctFileRegex)
 	return &AcctCollector{
 		AcctInodesMetric: AcctInodesMetric.CreatePrometheusMetric([]string{"id"}, acctFileRegexp),
 		AcctKbytesMetric: AcctKbytesMetric.CreatePrometheusMetric([]string{"id"}, acctFileRegexp),
 		acctFilePatterns: acctFilePatterns,
 		acctFileRegex:    acctFileRegexp,
-		level:            level,
+		BaseCollector: BaseCollector{configKey: configKey},
 	}
 }
 
@@ -44,18 +43,9 @@ func (x *AcctCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- x.AcctKbytesMetric
 }
 
-// CollectBasicMetrics collects basic metrics
-func (c *AcctCollector) CollectBasicMetrics(ch chan<- prometheus.Metric) {
-	if c.level == consts.Basic {
-		c.CollectAcctMetrics(ch, c.acctFilePatterns)
-	}
-}
-
-// CollectExtendedMetrics collects extended metrics
-func (c *AcctCollector) CollectExtendedMetrics(ch chan<- prometheus.Metric) {
-	if c.level == consts.Extended {
-		c.CollectAcctMetrics(ch, c.acctFilePatterns)
-	}
+// CollectMetrics collects metrics
+func (c *AcctCollector) CollectMetrics(ch chan<- prometheus.Metric) {
+	c.CollectAcctMetrics(ch, c.acctFilePatterns)
 }
 
 func (c *AcctCollector) CollectAcctMetrics(ch chan<- prometheus.Metric, pattern string) {
