@@ -23,54 +23,52 @@ func NewOsdCollector(name string, config *ini.Section) *OsdCollector {
 		BaseCollector: BaseCollector{
 			name:  name,
 			config: *config,
-			singleCollectors: []collectortypes.SingleCollector{
-				*collectortypes.NewSingleCollector(
+			collectors: []collectortypes.CollectorType{
+				collectortypes.NewSingleCollector(
 					collectortypes.NewMetricInfo("lustre_osd_files_free", "number of free files in osd"),
 					fmt.Sprintf("%s/%s/filesfree", consts.SysfsBaseDir, osdPathGlob),
 					fmt.Sprintf(`%s/%s/filesfree`, consts.SysfsBaseDir, osdPathReg),
 					"files",
 				),
-				*collectortypes.NewSingleCollector(
+				collectortypes.NewSingleCollector(
 					collectortypes.NewMetricInfo("lustre_osd_files_total", "total number of files in osd"),
 					fmt.Sprintf("%s/%s/filestotal", consts.SysfsBaseDir, osdPathGlob),
 					fmt.Sprintf(`%s/%s/filestotal`, consts.SysfsBaseDir, osdPathReg),
 					"files",
 				),
-				*collectortypes.NewSingleCollector(
+				collectortypes.NewSingleCollector(
 					collectortypes.NewMetricInfo("lustre_osd_kbytes_free", "free space in osd in kbytes"),
 					fmt.Sprintf("%s/%s/kbytesfree", consts.SysfsBaseDir, osdPathGlob),
 					fmt.Sprintf(`%s/%s/kbytesfree`, consts.SysfsBaseDir, osdPathReg),
 					"kbytes",
 				),
-				*collectortypes.NewSingleCollector(
+				collectortypes.NewSingleCollector(
 					collectortypes.NewMetricInfo("lustre_osd_kbytes_avail", "available space in osd in kbytes"),
 					fmt.Sprintf("%s/%s/kbytesavail", consts.SysfsBaseDir, osdPathGlob),
 					fmt.Sprintf(`%s/%s/kbytesavail`, consts.SysfsBaseDir, osdPathReg),
 					"kbytes",
 				),
-				*collectortypes.NewSingleCollector(
+				collectortypes.NewSingleCollector(
 					collectortypes.NewMetricInfo("lustre_osd_kbytes_total", "total space in osd in kbytes"),
 					fmt.Sprintf("%s/%s/kbytestotal", consts.SysfsBaseDir, osdPathGlob),
 					fmt.Sprintf(`%s/%s/kbytestotal`, consts.SysfsBaseDir, osdPathReg),
 					"kbytes",
 				),
-			},
-			acctCollectors: []collectortypes.AcctCollector{
-				*collectortypes.NewAcctCollector(
+				collectortypes.NewAcctCollector(
 					collectortypes.NewMetricInfo("lustre_osd_acct_user_inodes", "inode accounting per user"),
 					collectortypes.NewMetricInfo("lustre_osd_acct_user_kbytes", "size accounting per user in kbytes"),
 					fmt.Sprintf("%s/%s/quota_slave/acct_user", consts.ProcfsBaseDir, osdPathGlob),
 					fmt.Sprintf(`%s/%s/quota_slave/acct_user`, consts.ProcfsBaseDir, osdPathReg),
 					"quota",
 				),
-				*collectortypes.NewAcctCollector(
+				collectortypes.NewAcctCollector(
 					collectortypes.NewMetricInfo("lustre_osd_acct_group_inodes", "inode accounting per group"),
 					collectortypes.NewMetricInfo("lustre_osd_acct_group_kbytes", "size accounting per group in kbytes"),
 					fmt.Sprintf("%s/%s/quota_slave/acct_group", consts.ProcfsBaseDir, osdPathGlob),
 					fmt.Sprintf(`%s/%s/quota_slave/acct_group`, consts.ProcfsBaseDir, osdPathReg),
 					"quota",
 				),
-				*collectortypes.NewAcctCollector(
+				collectortypes.NewAcctCollector(
 					collectortypes.NewMetricInfo("lustre_osd_acct_project_inodes", "inode accounting per project"),
 					collectortypes.NewMetricInfo("lustre_osd_acct_project_kbytes", "size accounting per project in kbytes"),
 					fmt.Sprintf("%s/%s/quota_slave/acct_project", consts.ProcfsBaseDir, osdPathGlob),

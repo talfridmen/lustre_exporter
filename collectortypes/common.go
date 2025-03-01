@@ -6,6 +6,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+type CollectorType interface {
+	Describe(ch chan<- *prometheus.Desc)
+	CollectMetrics(ch chan<- prometheus.Metric)
+	GetConfigKey() string
+}
+
 type BaseCollector struct {
 	configKey       string
 }

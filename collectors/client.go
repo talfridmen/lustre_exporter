@@ -23,16 +23,14 @@ func NewLliteCollector(name string, config *ini.Section) *LliteCollector {
 		BaseCollector: BaseCollector{
 			name:  name,
 			config: *config,
-			multiMetricCollectors: []collectortypes.MultiMetricCollector{
-				*collectortypes.NewMultiMetricCollector(
+			collectors: []collectortypes.CollectorType{
+				collectortypes.NewMultiMetricCollector(
 					collectortypes.NewMetricInfo("lustre_llite_cache", "info about lustre client cache"),
 					fmt.Sprintf("%s/%s/max_cached_mb", consts.KernelDebugBaseDir, llitePathGlob),
 					fmt.Sprintf("%s/%s/max_cached_mb", consts.KernelDebugBaseDir, llitePathReg),
 					"cache",
 				),
-			},
-			statsCollectors: []collectortypes.StatsCollector{
-				*collectortypes.NewStatsCollector(
+				collectortypes.NewStatsCollector(
 					collectortypes.NewMetricInfo("lustre_llite_stats_samples", "number of samples of metadata operations"),
 					collectortypes.NewMetricInfo("lustre_llite_stats_sum", "number of samples of metadata operations"),
 					fmt.Sprintf("%s/%s/stats", consts.KernelDebugBaseDir, llitePathGlob),
