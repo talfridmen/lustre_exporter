@@ -12,11 +12,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type Metric struct {
-	key   string
-	value int
-}
-
 type MultiMetricCollector struct {
 	metric      *prometheus.Desc
 	filePattern string

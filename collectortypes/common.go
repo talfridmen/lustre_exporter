@@ -21,6 +21,12 @@ type MetricInfo struct {
 	help string
 }
 
+// for use in parsers to hold local key-value pairs
+type Metric struct {
+	key   string
+	value int
+}
+
 func NewMetricInfo(name string, help string) *MetricInfo {
 	return &MetricInfo{
 		name: name,
