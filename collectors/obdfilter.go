@@ -90,6 +90,12 @@ func NewOBDFilterCollector(name string, config *ini.Section) *OBDFilterCollector
 					fmt.Sprintf(`%s/qmt/%s/dt-0x0/glb-prj`, consts.ProcfsBaseDir, consts.QMT_REG),
 					"quota",
 				),
+				collectortypes.NewRecoveryCollector(
+					collectortypes.NewMetricInfo("lustre_obdfilter_recovery_status", "recovery status of OST"),
+					fmt.Sprintf("%s/%s/recovery_status", consts.ProcfsBaseDir, obdfilterPathGlob),
+					fmt.Sprintf("%s/%s/recovery_status", consts.ProcfsBaseDir, obdfilterPathReg),
+					"recovery_status",
+				),
 			},
 		},
 	}

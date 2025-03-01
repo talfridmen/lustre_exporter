@@ -72,6 +72,12 @@ func NewMDTCollector(name string, config *ini.Section) *MDTCollector {
 					fmt.Sprintf(`%s/qmt/%s/md-0x0/glb-prj`, consts.ProcfsBaseDir, consts.QMT_REG),
 					"quota",
 				),
+				collectortypes.NewRecoveryCollector(
+					collectortypes.NewMetricInfo("lustre_mdt_recovery_status", "recovery status of OST"),
+					fmt.Sprintf("%s/%s/recovery_status", consts.ProcfsBaseDir, mdtPathGlob),
+					fmt.Sprintf("%s/%s/recovery_status", consts.ProcfsBaseDir, mdtPathReg),
+					"recovery_status",
+				),
 			},
 		},
 	}
