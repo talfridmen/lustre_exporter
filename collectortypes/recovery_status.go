@@ -22,7 +22,7 @@ type RecoveryCollector struct {
 func NewRecoveryCollector(metric *MetricInfo, filePattern string, FileRegex string, configName string) *RecoveryCollector {
 	fileRegexp := *regexp.MustCompile(FileRegex)
 	return &RecoveryCollector{
-		metric:      metric.CreatePrometheusMetric([]string{}, fileRegexp),
+		metric:      metric.CreatePrometheusMetric([]string{"key"}, fileRegexp),
 		filePattern: filePattern,
 		fileRegex:   fileRegexp,
 		BaseCollector: BaseCollector{configKey: configName},
@@ -61,7 +61,7 @@ func ParseRecovery(input string) ([]Metric) {
 
 	scanner := bufio.NewScanner(strings.NewReader(input))
 
-	metricLineRegex := regexp.MustCompile(`(?P<key>.*): (?P<value>\d*)`)
+	metricLineRegex := regexp.MustCompile(`(?P<key>.*): (?P<value>.*)`)
 
 	for scanner.Scan() {
 		line := scanner.Text()
