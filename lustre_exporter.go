@@ -35,7 +35,7 @@ func main() {
 	exporter.RegisterCollector(collectors.NewOBDFilterCollector("obdfilter", inidata.Section("obdfilter")))
 	exporter.RegisterCollector(collectors.NewOsdCollector("osd", inidata.Section("osd")))
 	exporter.RegisterCollector(collectors.NewLdlmCollector("ldlm", inidata.Section("ldlm")))
-	exporter.RegisterCollector(collectors.NewLliteCollector("client", inidata.Section("client")))
+	exporter.RegisterCollector(collectors.NewLliteCollector("llite", inidata.Section("client")))
 
 	// Start the exporter
 	exporter.Start(fmt.Sprintf(`:%d`, *port))
