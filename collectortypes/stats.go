@@ -57,12 +57,12 @@ func ParseStats(input string) (map[string]Stat, error) {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, "snapshot_time") {
-			// Skip the snapshot_time line
+		fields := strings.Fields(line)
+
+		if len(fields) < 4 {
+			// Skip some time related lines
 			continue
 		}
-
-		fields := strings.Fields(line)
 
 		syscall := fields[0]
 

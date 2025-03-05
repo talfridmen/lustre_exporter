@@ -86,10 +86,6 @@ func ParseJobStat(input string) (map[Key]JobStat, error) {
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "snapshot_time") {
-			// Skip the snapshot_time line
-			continue
-		}
 		if strings.HasPrefix(line, "- job_id:") {
 			suffix, _ := strings.CutPrefix(line, "- job_id:")
 			job = strings.TrimSpace(suffix)
@@ -97,6 +93,10 @@ func ParseJobStat(input string) (map[Key]JobStat, error) {
 		}
 
 		fields := strings.Fields(line)
+		if len(fields) < 4 {
+			// Skip some time related lines
+			continue
+		}
 
 		syscall := strings.TrimSuffix(fields[0], ":")
 
