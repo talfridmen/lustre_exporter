@@ -36,6 +36,7 @@ func main() {
 	exporter.RegisterCollector(collectors.NewOsdCollector("osd", inidata.Section("osd")))
 	exporter.RegisterCollector(collectors.NewLdlmCollector("ldlm", inidata.Section("ldlm")))
 	exporter.RegisterCollector(collectors.NewLliteCollector("llite", inidata.Section("client")))
+	exporter.RegisterCollector(collectors.NewRpcCollector("rpc", inidata.Section("rpc")))
 
 	// Start the exporter
 	exporter.Start(fmt.Sprintf(`:%d`, *port))
