@@ -15,5 +15,5 @@ In addition, each instance is tagged with a label that allows to enable and disa
 ### consts
 includes some constants such as base paths to counter files, and so on
 
-### main.go
+### lustre_exporter.go
 runs through all the collectors, running the collect function of each one, which in turn, runs the collect function of each collectorType instance.
